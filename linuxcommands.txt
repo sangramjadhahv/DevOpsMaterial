@@ -1,0 +1,17 @@
+
+  1  pwd
+    2  yum install tree
+    3  which tree
+    4  rpm -qa|grep tree
+    5  ls
+    6  ls-lrt
+    7  ls -lrt
+    8  ssh-keygen -t rsa
+    9  cat /root/.ssh/id_rsa.pub
+   10  ssh root@172.31.18.210
+   11  mkdir -p /opt/DevOpsMaterial && cd /opt/DevOpsMaterial
+   12  git init
+   13  yum install git -y
+   14  git init
+   15  history
+
