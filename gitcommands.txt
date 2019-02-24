@@ -1,0 +1,15 @@
+
+git init
+   13  yum install git -y   >> This command is used for git client installation through linux
+   14  git init   >> This command is used to check git is initialised or not. In this way we are telling that this is git local repo
+   18  git status  >> Gives status of files in local repository
+   19  git add linuxcommands.txt   >> add command is used for adding new file
+   20  git status  >> same to check latest status of file in git repo
+   21  git commit "my first commit"  >>> wrong command
+   22  git commit -m"my first commit"  >>>>> to commit any file from untracked area to commit area
+   23  git status  >> 
+   24  git remote add origin https://github.com/sangramjadhahv/DevOpsMaterial.git   >>> to connect to the remote repository from our current local repository
+   25  git push -u origin master     >>>> push our changes from local repo to remote history
+   26  history| grep git    >>> to get all the used commands related to git.
+
+
