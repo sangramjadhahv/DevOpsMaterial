@@ -1,0 +1,11 @@
+---
+- hosts: server
+  gather_facts: no
+  tasks:
+    - name:   installing httpd
+      yum:    pkg=httpd state=installed
+      become: true
+
+    - name: start httpd service
+      service: name=httpd state=started
+      become: true

@@ -1,0 +1,7 @@
+---
+- host: server
+
+  tasks:
+    - name:   installing httpd
+      yum:    pkg=httpd state=installed
+      become: true
