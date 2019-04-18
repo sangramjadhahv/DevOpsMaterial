@@ -15,8 +15,8 @@ Our own region we will get in aws console url.
 - You should have credentials.txt under .aws file under user admin
 
 C:\Users\patils\.aws
-aws_access_key_id = AKIAJ73SOZSSMS2GV5EQ
-aws_secret_access_key = 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
+#AAaws_access_key_id = AKIAJ73SOZSSMS2GV5EQ
+####AAaws_secret_access_key = 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
 
 - Run test_deployment.py and debug errors and make changes accordingly.
 
