@@ -1,0 +1,181 @@
+#####################Python boto3_vpc_Ec2 master program: -############
+
+@@@@ Virtual env.  Under same project where we have given virtual env , clone the ec2 project
+https://github.com/maheshkharwadkar/python-boto3-vpc_and_ec2.git
+
+Note:-  Updated code kept in file - 'test_deployment_updated.py' under path >> C:\Users\patils\Desktop\DevOps Material\python-boto3-vpc_and_ec2-master\src
+
+change in (aws-project) root@ip-172-31-29-91:/opt/aws-boto-demo/python-boto3-vpc_and_ec2/src# vi test_deployment.py
+
+in test_deployment.py  uncomment main().
+
+- change region_name in  vi client_locator.py file .
+Our own region we will get in aws console url.
+
+- You should have credentials.txt under .aws file under user admin
+
+C:\Users\patils\.aws
+aws_access_key_id = AKIAJ73SOZSSMS2GV5EQ
+aws_secret_access_key = 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
+
+- Run test_deployment.py and debug errors and make changes accordingly.
+
+(aws-project) root@ip-172-31-29-91:/opt/aws-boto-demo/python-boto3-vpc_and_ec2/src# python test_deployment.py
+Traceback (most recent call last):
+  File "test_deployment.py", line 1, in <module>
+    from src.ec2.vpc import VPC
+ImportError: No module named 'src'
+
+
+- Change import statement - remove src. >>> make import statement as
+from ec2.vpc import VPC
+from ec2.ec2 import EC2
+from client_locator import EC2Client
+
+- After running
+Creating a VPC...
+Traceback (most recent call last):
+  File "test_deployment.py", line 151, in <module>
+    main()
+  File "test_deployment.py", line 11, in main
+    vpc_response = vpc.create_vpc()
+  File "/opt/aws-boto-demo/python-boto3-vpc_and_ec2/src/ec2/vpc.py", line 11, in create_vpc
+    CidrBlock='10.0.0.0/16'
+  File "/opt/aws-boto-demo/aws-project/lib/python3.5/site-packages/botocore/client.py", line 357, in _api_call
+    return self._make_api_call(operation_name, kwargs)
+  File "/opt/aws-boto-demo/aws-project/lib/python3.5/site-packages/botocore/client.py", line 661, in _make_api_call
+    raise error_class(parsed_response, operation_name)
+botocore.exceptions.ClientError: An error occurred (UnauthorizedOperation) when calling the CreateVpc operation: You are not authorized to perform this operation.
+(aws-project) root@ip-172-31-29-91:/opt/aws-boto-demo/python-boto3-vpc_and_ec2/src#
+
+- Add credentials in - client_locator.py
+
+self._client = boto3.client(client, region_name="ap-south-1", aws_access_key_id="AKIAJ73SOZSSMS2GV5EQ", 
+                      aws_secret_access_key="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")
+					  
+					  
+- After running >>> error below as incalid AMIid
+
+Traceback (most recent call last):
+  File "test_deployment.py", line 151, in <module>
+    main()
+  File "test_deployment.py", line 93, in main
+    ec2.launch_ec2_instance(ami_id, key_pair_name, 1, 1, public_security_group_id, public_subnet_id, user_data)
+  File "/opt/aws-boto-demo/python-boto3-vpc_and_ec2/src/ec2/ec2.py", line 50, in launch_ec2_instance
+    UserData=user_data
+  File "/opt/aws-boto-demo/aws-project/lib/python3.5/site-packages/botocore/client.py", line 357, in _api_call
+    return self._make_api_call(operation_name, kwargs)
+  File "/opt/aws-boto-demo/aws-project/lib/python3.5/site-packages/botocore/client.py", line 661, in _make_api_call
+    raise error_class(parsed_response, operation_name)
+botocore.exceptions.ClientError: An error occurred (InvalidAMIID.NotFound) when calling the RunInstances operation: The image id '[ami-1b316af0]' does not exist
+(aws-project) root@ip-172-31-29-91:/opt/aws-boto-demo/python-boto3-vpc_and_ec2/src#
+
+
+-Change Ami_id in test_deployment.py . Take t AMI_id of red hat machine. Create Red hat instance and create Image 
+
+- Before running, deletec created VPC and aws key pair first, as these got created in above run. these are partially created due to error.
+
+- Run-
+
+
+
+(aws-project) root@ip-172-31-29-91:/opt/aws-boto-demo/python-boto3-vpc_and_ec2/src# python test_deployment.py
+Creating a VPC...
+VPC created:{'Vpc': {'Ipv6CidrBlockAssociationSet': [], 'DhcpOptionsId': 'dopt-9a171df2', 'Tags': [], 'VpcId': 'vpc-01798d2d98fdc85ba', 'CidrBlock': '10.0.0.0/16', 'State': 'pending', 'CidrBlockAssociationSet': [{'AssociationId': 'vpc-cidr-assoc-022f19ee179a6f8fb', 'CidrBlock': '10.0.0.0/16', 'CidrBlockState': {'State': 'associated'}}], 'OwnerId': '079663148726', 'IsDefault': False, 'InstanceTenancy': 'default'}, 'ResponseMetadata': {'RequestId': 'b1204e3c-749d-4247-b7f6-d38031cbfc42', 'HTTPStatusCode': 200, 'RetryAttempts': 0, 'HTTPHeaders': {'server': 'AmazonEC2', 'content-length': '923', 'content-type': 'text/xml;charset=UTF-8', 'date': 'Sun, 31 Mar 2019 04:52:09 GMT'}}}
+Adding Boto3-VPC tag to the vpc-01798d2d98fdc85ba
+Added Boto3-VPC to vpc-01798d2d98fdc85ba
+Creating an Internet Gateway...
+Attaching Internet Gateway igw-0d60728e2c2c01df4 to VPC vpc-01798d2d98fdc85ba
+Creating a subnet for VPCvpc-01798d2d98fdc85ba with CIDR block 10.0.1.0/24
+Subnet created for VPC vpc-01798d2d98fdc85ba:{'Subnet': {'AvailabilityZone': 'ap-south-1b', 'AvailabilityZoneId': 'aps1-az3', 'Ipv6CidrBlockAssociationSet': [], 'State': 'pending', 'OwnerId': '079663148726', 'AvailableIpAddressCount': 251, 'SubnetId': 'subnet-03f213382134604f6', 'VpcId': 'vpc-01798d2d98fdc85ba', 'CidrBlock': '10.0.1.0/24', 'DefaultForAz': False, 'SubnetArn': 'arn:aws:ec2:ap-south-1:079663148726:subnet/subnet-03f213382134604f6', 'MapPublicIpOnLaunch': False, 'AssignIpv6AddressOnCreation': False}, 'ResponseMetadata': {'RequestId': '6ac0b261-f9dc-4f91-99b8-017944ee0f3f', 'HTTPStatusCode': 200, 'RetryAttempts': 0, 'HTTPHeaders': {'server': 'AmazonEC2', 'content-length': '928', 'content-type': 'text/xml;charset=UTF-8', 'date': 'Sun, 31 Mar 2019 04:52:09 GMT'}}}
+Adding Boto3-Public-Subnet tag to the subnet-03f213382134604f6
+Creating public Route Table for VPC vpc-01798d2d98fdc85ba
+Adding route for IGW igw-0d60728e2c2c01df4 to Route Table rtb-07e41dcbade7fcd8e
+Associating subnet subnet-03f213382134604f6 with Route Table rtb-07e41dcbade7fcd8e
+Creating a subnet for VPCvpc-01798d2d98fdc85ba with CIDR block 10.0.2.0/24
+Created private subnet subnet-0e766dc65a0048874 for VPC vpc-01798d2d98fdc85ba
+Adding Boto3-Private-Subnet tag to the subnet-0e766dc65a0048874
+Creating a key pair with name Boto3-KeyPair
+Created Key Pair with name Boto3-KeyPair:{'KeyName': 'Boto3-KeyPair', 'KeyFingerprint': '5b:2d:ef:cb:b1:6a:4d:95:27:d1:62:b6:66:4c:95:d9:f8:90:19:d7', 'ResponseMetadata': {'RequestId': 'ab3e3442-9ee2-4538-bdfd-3d05dc95c817', 'HTTPStatusCode': 200, 'RetryAttempts': 0, 'HTTPHeaders': {'server': 'AmazonEC2', 'content-length': '2037', 'content-type': 'text/xml;charset=UTF-8', 'date': 'Sun, 31 Mar 2019 04:52:10 GMT'}}, 'KeyMaterial': '-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAgKtSpL1Hwvsx+DkSy61fCEs0C6c3A6CFBSrZ7f33+H9OJUkqENPWUvyKFfZ1\nLt7toYTCzGtX8ns96+wtX6xdFvtMtxYFXx26UAcr/Ijq0XaZFxbyaoh5SVIX5GY8QXrWCmtp+d/Q\nkMUWDgG3QaYwDeDKF73MCPAswvD6RGnBuatpqJ7MI4X2da3bX9E+wrWjl/QOxXEk33N3UuroF/9N\nKMf4jwCUQpIo3Sj3DqUPWdUJqxPIp+zAAYgY3M8d+WWlRaGF2HUf8r3/us47foRQ68t2XZVE7DBy\no6NRazz15GOaL1RxPpbYQzjmsXOVciHYwzHtjA39iTXgMl6E/9aIFQIDAQABAoIBAFv9oMVlChRN\n0Uj9TQHPft0IHzqhn0R5lADAxTRQ2eOQ6MbhizCis117biILpXYQLebHaxoJOMSE9h1hKoN3UMqo\neg1/sfFx6I1kwz72iKOe3g7S+hfOYKBaD/jcWwIZl0O1zfu2139ZWM5Ezcci0MJrTzEwIdrWE7p/\n3P3ien2KGt50odfIqzFl/0/d+8N52zRxnPkS1YYrTXvhyErnfc2tZBt4aHnfzyKIpk2v8mmHJ/RY\n0vJq3r7l5VkFYZaN44qF4Pay0gy6jgbiVQuiT6D2+nWEIsq5fOi7V9jDYH0omBepivhtApoyUUb5\nKoiV3KznyYYbYy2Dfn9OPBrDq3UCgYEAvlELy9vYMKSSMkjZX4/r5TVN4AuWYGzCnX73tPsy1i30\nQ/x/PHlWNd8guUbntd77sBaC2B7nYYdCs3JlVGEEiBVJPdcCdS8jREPuoXHoC76FcqG2OzImFdpb\n2lU47UXgjHOhrIt8HjqNN7vgU/fKWjdhr4ilu56P1lqGvnsH4O8CgYEArROTgIrvB+ZEjVn3sY7R\n8kcQaQfM3VL1dF3eKeFv6XFQ/9GRy1dN5bPrM+1qa+aYR89L2vw3xqNgTaj9dMF8QGOUr1TRtBI3\nwP299l0Pme1+KY/D6iiO1iIOjtYB+PUYG0PqOJm7Myges7Bw6I16lJ7hDTT8KxLUhfOM8sZDXzsC\ngYEAtCZbmDkeR81AZkD3IrJFhc4TTUUqr1PEVPle2P3/fSY61jAo8MGajZwMidVIeKv+awykBpga\nRgOXa+2ZZWoAtCASGGtydCKOq4vyUvhTwuoxv/S7XwV1b7ImyGFrZY6Do+/A1meisaqTCnLZQiKI\ndSV/Xn1nBFZvqWQ/sAcdyhkCgYBK1RwBiBCxqa4aL7wY2VeNGYzO3MCHMUdPeQaFtSNeG9CZy1Lu\nSGE14ATh/tT0sk9FPSvfEw5KpHkPGvH7eWzvqh6vcEz7PqU8nHl1++ay9yyFa9OZes/HZhJFT+Kq\ncc5qe4LZ1h5KkB42MyOeaQ2HFOrZev9M4GdjQ1q93Vtj4QKBgCUXgt87cWeUbqc1nLiPeQZn/j5K\n++xkjelTmQArsHCxGRlrjTjhnIYqxpt1/LyM2yoj3VAn1JgTCGLancu0wcWOpQCLZYLr7ftBUKRV\nKzD1rgLmXVASwNassJhIKF9uBYTiSwsx95otn5UL6ZgnE5TSSJ2rnW6y0KN9+UV1xqCm\n-----END RSA PRIVATE KEY-----'}
+Creating a Security Group with name Boto3-Public-SG for VPC vpc-01798d2d98fdc85ba
+Adding inbound public access to Security Group sg-0b8da86d75ae5a055
+Added public access rule to Security Group Boto3-Public-SG
+Launching EC2 Instance(s) within Subnet subnet-03f213382134604f6
+Launching Public EC2 Instance using AMI ami-09df65fc942478a39
+Creating a Security Group with name Boto3-Private-SG for VPC vpc-01798d2d98fdc85ba
+Adding inbound public access to Security Group sg-0e588cf819a62fe8a
+Launching EC2 Instance(s) within Subnet subnet-0e766dc65a0048874
+Launching Private EC2 Instance using AMIami-09df65fc942478a39
+(aws-project) root@ip-172-31-29-91:/opt/aws-boto-demo/python-boto3-vpc_and_ec2/src#
+
+
+
+
+
+
+- Smililarly 
+
+Try out other functions written in 'test_deployment.py' . uncomment only one at time and comment all the rest of the functions
+
+
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ New Topic @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@2
+
+
+Ansible :-  ( See Notes from notebook)
+
+
+we have done creation of EC2 instance, VPC, modifying instances through Boto3 libraries.
+
+Now same thing we can do in ansible.
+
+Ansible mostly use for remote SSH automation.
+
+Shell script discuss about How part and in Ansible we think about What part
+
+In case of ansible we use package name and state of package.
+
+Here we will run what are module available in Ansiible and its state 
+
+eg 
+
+Module - yum
+
+package: - httpd
+
+
+same we have done in ssh by below steps
+
+-ssh
+-yum instal httpd
+
+
+- In Ansible , first ansible checks whather that object is present if yes then wont do anything, if not then only it will create.
+
+- if we dont have direct access to managebale machines from Ansible , and we have Baston host in middle In that case we have 2 options to manage 
+  1) we will do SSH forwarding and access machines from ansible
+  2) we can insatll Ansible,jenkins and other configurations tools on Baston Host
+  
+- All modules of ansible written in Python
+
+But every code we written in Ansible is YAML format. 
+
+Files, groups, users, services, registry key these things we can manage by any configuration tools
+
+
+
+Ansible Terminologies :_ 
+- Module >> task >> Play(Multiple taks) >> Playbooks (Multiple Pays) >> Roles
+
+
+- Ther are two modules, Default module and Custom module 
+for custome module we can write in pyhton, ruby,shell
+
+
+
+  
+  
+
+
+

@@ -1,0 +1,313 @@
+#################################Python Scripting #######################
+
+For best video in You tube - Search :- Google Python Class
+
+
+.py  >>>>>> .pyc >>>>>> Virtual machine for execution (Similar o JVM)
+
+Dont need to compile code
+Dont have to provide data type
+e.g i=1
+Python is functional orianted language
+
+for loop
+
+=====Python - for loop===========
+
+def print_multiplication_table(table,start,end):
+  for i in range (start,end):
+    print (f"{table} * {i} = {table *i}")
+    
+print_multiplication_table(5,1,11)
+
+
+ 
+ ===================== As python is not in my window machine so doing in Ubuntu machine. In ubuntu you will get default latest python
+ 
+ sudo apt update
+ 
+ sudo apt install python3-pip
+ 
+ 
+ 
+root@ip-172-31-13-124:~# which python3
+/usr/bin/python3
+
+To run any pyhton program give initaily path of python
+
+=====Python - for loop===========
+
+def print_multiplication_table(table,start,end):
+  for i in range (start,end):
+    print (f"{table} * {i} = {table *i}")
+    
+print_multiplication_table(5,1,11)
+
+
+Output:- 
+
+root@ip-172-31-13-124:/opt/pyhton# /usr/bin/python3 forLoop.py
+5 * 1 = 5
+5 * 2 = 10
+5 * 3 = 15
+5 * 4 = 20
+5 * 5 = 25
+5 * 6 = 30
+5 * 7 = 35
+5 * 8 = 40
+5 * 9 = 45
+5 * 10 = 50
+
+
+
+=============
+
+==================================
+
+
+=============================================
+
+List ----
+
+
+
+ #!/usr/local/bin/python3.6 
+users = ["user1","user2","user3"]
+print (users[0])
+#Accessing last element in list
+print (users[len(users)-1])
+print (users[-1])
+print (users[-2])
+
+
+Output:- 
+
+root@ip-172-31-13-124:/opt/pyhton# /usr/bin/python3 list.py
+user1
+user3
+user3
+user2
+ 
+ 
+ =====================
+ 
+ 
+#Add or move elements in the list
+users = ["user1","user2","user3"]
+users[1] = "jdoe"
+print (users)
+users.append("peter")
+print users
+ 
+users=[]
+users.append("mahesh")
+print(users)
+ 
+#insert add an item at specific index
+users.insert(1,"mary")
+users.remove("mahesh")
+ 
+print users[]
+
+Output:-
+root@ip-172-31-13-124:/opt/pyhton# /usr/bin/python3 addMoveElementList.py
+['user1', 'jdoe', 'user3']
+['user1', 'jdoe', 'user3', 'peter']
+['mahesh']
+['mary']
+root@ip-172-31-13-124:/opt/pyhton#
+
+ ###########################Looping####################################
+ 
+ users =[]
+ users.append("ahmad")
+ users.append("john")
+ users.append("linda")
+ users.insert(1,"mary")
+ users.append("john")
+ print (users)
+#Sorting a list
+#users.sort() #This will sort a list
+ print (sorted(users))
+ print (users)
+ sorted_users = sorted(users)
+
+ 
+ 
+ 
+ #################### List slicing ###########
+ 
+ checking on python command prompt
+ 
+ >>> users=["user1","user2","user3"]
+>>> print(users[1:3])
+['user2', 'user3']
+>>>
+
+users[1:3] means 1 is inclusive and 3 is exclusive. so it will print user2 and user3 i.e in list starts from 0 index
+
+
+>>> users=["user1","user2","user3","users4","users5"]
+>>> print (users[1:3:2])
+['user2']
+>>>
+
+users[1:3:2] means 1 is inclusive, 3 is exclusive,and 2 is step (in multiple of step)
+
+>>> users=["user1","user2","user3","users4","users5"]
+>>> print (users[1::2])
+['user2', 'users4']
+>>>
+[1::2] >>> [start:end:step] >>> here end is nothing so full list i.e default i.e list-1 and step is 2. so every alteranate 2 elements
+
+In step we can do negative as well
+
+>>> users=["user1","user2","user3","users4","users5"]
+>>> print (users[1::-1])
+['user2', 'user1']
+>>>
+
+
+Print list reversaly
+
+>>> users=["user1","user2","user3","users4","users5"]
+>>> print (users[::-1])
+['users5', 'users4', 'user3', 'user2', 'user1']
+>>>
+
+
+====######################### List Comprehension ######################
+
+Immutable string -
+>>> my_ethans="ethans"
+>>> my_ethans[0]="p"
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: 'str' object does not support item assignment
+>>>
+
+
+use case- from list I need to put 123 at last to every element
+
+
+# Your security team said every  username contains 1 didgit
+# for example above user list is not valid we have to loop through the list and digit for the same
+  num = "123"
+  #traditional way 
+  for i in range(0,len(users)):
+   users[i]= users[i] + num
+  print (users)
+  
+  users = [u+num for u in users]
+  print (users)
+  
+ @@@ Actual Program :- 
+  
+  num = "123"
+
+# traditional way to append 123 to every element of list
+users = ["user1", "user2", "user3", "user4"]
+for i in range(0, len(users)):
+    users[i] = users[i] + num
+print(users)
+
+# list comprehension reduces four Lines of Code to one line
+users = ["user1", "user2", "user3", "user4"]
+users = [u + num for u in users]
+print(users)
+
+
+Output: -
+root@ip-172-31-13-124:/opt/pyhton# /usr/bin/python3 listComprehension2.py
+['user1123', 'user2123', 'user3123', 'user4123']
+['user1123', 'user2123', 'user3123', 'user4123']
+
+
+#############################  String in python as list
+
+#Strings in python considered as list of charecters
+message = "Hello World"
+for s in message:
+  print (s)
+
+message = [s + " " for s in message]
+print (message)
+print(''.join(message))
+# (which joins list of charecter to string)
+
+print('*'.join(message))
+
+
+
+Output:- 
+root@ip-172-31-13-124:/opt/pyhton# /usr/bin/python3 stringAsList.py
+H
+e
+l
+l
+o
+
+W
+o
+r
+l
+d
+['H ', 'e ', 'l ', 'l ', 'o ', '  ', 'W ', 'o ', 'r ', 'l ', 'd ']
+H e l l o   W o r l d
+H *e *l *l *o *  *W *o *r *l *d
+
+root@ip-172-31-13-124:/opt/pyhton#
+
+
+
+
+####################  
+
+Python tuple is immutable whereas List is mutable rest in Tuple is simlilar to List
+
+
+##################  Dictionaries ###################
+
+ Key and value pair
+ 
+ 
+#It is simmilar to lists excepts that it aceepts item as key value pair
+#user = ['mahesh','35','Devops Engoneer','US']
+
+user = {
+    "username":"mahesh",
+    "age":"35",
+    "job":"Devops Engineer",
+    "country":"US"
+}
+
+print ("The Username is",user["username"],", he is",user["age"],"years old","he works as",user["job"],"and lives in",user["country"] )
+
+
+Output:
+root@ip-172-31-13-124:/opt/pyhton# /usr/bin/python3 Dictionaries.py
+The Username is mahesh , he is 35 years old he works as Devops Engineer and lives in US
+
+
+
+
+ 
+###############Loop Through Dictionary##########################
+langs = {
+"en":"English",
+"es":"Spanish",
+"ar":"Arabic",
+"it":"Italian"
+}
+
+
+for key,value in langs.items():
+  print(key,":",value)
+  
+
+
+  
+
+
+
+

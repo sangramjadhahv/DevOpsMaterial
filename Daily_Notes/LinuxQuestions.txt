@@ -1,0 +1,193 @@
+What are the tasks perfromed buy Linux
+
+Process Schduling
+Memory managemnet
+Creation and termination of processes
+Provides filesystem
+Access to device such as mouse,monitors,keyboards etc
+Provision of a system call API
+Networking
+
+
+What is Runlevel
+
+Runlevel is a mode of operation in OS. It represents diff system state of Linux.
+
+When linux system boots the kernel get initialized and enters into one and only one RUN level.
+When service starts it will try to start all the services that are assoiated wit that runlevel.
+
+In short run level defines what tasks to be accomplished in the current level.
+
+
+Runlevel0 - System Shut down all running processes ,unmount file system and powers off
+Runlevel1 - Single user mode state where only single user can login into the system
+            It is also call rescue mode or trouble-shooting mode
+Runlevel2 - Multiuser no network support
+Runlevel3 - Non-Graphical text mode operations for server systems
+Runlevel4 - Custom mode used by sysadmin
+Runlevel5 - Grapg=hiocal login with same usability of Run level 3
+Runlevel6 - Reboot
+
+
+
+What is /sbin/init
+
+It is the first process started by Linux system after machine boot and the kernel loads into the memory.
+
+It decides how a user process or a system service should load in what order and wheather it should start automatically.
+
+It is parent of all the process.
+
+
+Chkconfig
+
+How to change time zone?
+
+date 
+
+sudo rm /etc/localtime
+sudo ln -s /usr/share/zoneinfo/us/Pacific /etc/localtime
+
+AWS Interview Questions
+
+1. Attaching AWS EBS volume to the instance
+
+Increasing volume to a instance
+1. Connect to instance using SSH
+2. Use the lsblk command to view our available disk devices and their mount points
+3. We need to create file system on the volume as the newly provisioned EBS volume is a raw block device.
+Volumes used for snapshots already have the data
+ sudo file -s /dev/xvda1 # it will list down the file system type
+ 
+4. Following command is used to create file system on the volume.
+sudo mkfs -t ext4 /dev/xvdf
+
+5. use the following command to create a mount point directory
+sudo mkdir /vol
+
+6. Use the following command to mount the location we just have created.
+sudo mount /dev/xvdf /vol
+
+7. We can check the new voulme is mounted or not 
+lsblk
+
+8. To mount this newly added EBs volume on every system reboot,We need to add the entry for device
+the /etc/fstab file.
+ I] Create a backup of our /etc/fstab file 
+    sudo cp /etc/fstab /etc/fstab.orig
+	
+ II] Open the /etc/fstab file and add a new line
+     device_name  mount_point  file_system_type  fs_mntops       fs_freq  fs_passno 
+	 dev/xvdf       /vol       ext4             defaults,nofail      0       2
+	 
+ III] Run the sudo mount -a command to mount all file systems in /etc/fstab.
+ IV]  Let's check out disk space using df -h
+
+ 
+
+9. Following is shell script to mount  the new voume
+   #!/bin/bash
+mkfs.ext4 /dev/xvdf
+mkdir /vol
+echo "/dev/xvdf /vol auto noatime 0 0" | sudo tee -a /etc/fstab
+
+
+AWS Cloud front
+
+It is a Global CDN service that speeds up delivery of static and dynamic content to your end users.
+It uses edge location to serve the content
+
+Edge location - It cached the file nearer to user'S physical location.
+
+Cloudfront:
+Edge loction can be used for both downloading and uploading objects.
+Set Objects TTL
+Geo Restriction (whitelist or blacklist countries)
+can invalidate cached objects (additinal cost)
+
+VPC and VPC Peering
+
+CIDR:
+Subnet:
+Routetable:
+Internet Gateway: Max 1 per VPC
+Network Access Control List: (ACL) : Acts as firewall at subnet level
+Security Group: 
+
+
+5 Pillars
+
+
+1. Security
+
+Design Prinipals
+ Apply Security at al layers
+ Enable Traceability
+ Automate response to security events
+ Focusing on Securing your system (Shared responsiblity model)
+ securit data , subnets and os
+ Automate security best prac
+
+Defination:
+  Security in the cloud consist of 4 areas
+  Data Protection
+  Privilege Management
+  Infrastructure Protection
+  Detective Controls
+
+VPC Flow log is way of tracking n/w traffic within VPC.
+It can be collected at 3 levels 
+ VPC
+ Subnet
+ Network Interface level 
+
+NAT vs Bastions
+
+
+
+SOA 
+It stores name of the server who stores data about the zone
+The administrator of the zone
+The current version of data file
+The number of seconds a secondray name server should wait before checking for updates.
+The number of seconds a secondry name server should wait before retrying a failed zone transfer
+The maximum number of seconds a secondry name server can use data before it must be refreshed or expired
+The default number of seconds for the time to live file on resource records
+
+NS Records:
+NS stands for name server records and used by top level domain servers to direct the traffic to the
+conten DNS server which conatins authorative DNS records.
+
+A Records:
+To translate the name of the domain to IP address.
+
+TTL
+The length of the DNS record is cached on either resolving server or users own local pc is equal to the
+value of TTL in seconds.
+The lower the value faster changes to DNS records takes to propogate throught the internet.
+ Used in DNS Migration 
+  drop the TTL of DNS record to 300 sec from 2 day
+
+CNames (canonical names)
+  it is used to resolve one domain name to another
+  
+Alias Records:
+Those are like CName records but CNAME can't be used used for naked domain names 
+e.g. you can not have CNAME for http://acloud.guru it is either A record or Alias records
+
+Alias resource records saves your time because Route 53 automatically recognizes chnages in record sets
+do not need to update the zone file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+

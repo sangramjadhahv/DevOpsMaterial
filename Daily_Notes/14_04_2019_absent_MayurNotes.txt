@@ -1,0 +1,453 @@
+
+Conversation opened. 1 read message.
+
+Skip to content
+Using Gmail with screen readers
+7 of 37,199
+ANSIBLE CONTENT SUNDAY LECTURE
+Inbox
+	x
+Mayur EDevops <mayurkumshi.devops@gmail.com>
+	
+4:46 PM (5 hours ago)
+	
+to me
+
+
+Creating Instance of EC2 from Ansible
+required:
+secret key
+access key
+
+use case  : to create a vm and pass the ip address
+
+
+- name: Create a new Demo EC2 instance
+  hosts: localhost
+  gather_facts: False
+
+  vars:
+      region: us-east-1
+      instance_type: t2.micro
+      ami: ami-26ebbc5c  # Redhat
+      keypair: pk-key # pem file name
+
+  tasks:
+
+    - name: Create an ec2 instance
+      ec2:
+         key_name: "{{ keypair }}"
+         aws_access_key: "AKIAJKCHVVFVMFG7KMNA"
+         aws_secret_key: "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"
+         group: Kubectl  # security group name
+         instance_type: "{{ instance_type}}"
+         image: "{{ ami }}"
+         wait: true
+         region: "{{ region }}"
+         count: 1  # default
+         count_tag:
+            Name: "Demo"
+         instance_tags:
+            Name: "Demo"
+         vpc_subnet_id: "subnet-4303836c"
+         assign_public_ip: yes
+      register: ec2
+   
+    - debug:
+        msg: "{{ item['private_ip'] }}"
+      with_items: "{{ ec2.instances }}"
+
+    - set_fact: ip_list= "[]"
+  
+    - name: Construct IP list
+      set_fact: ip_list= "{{ ip_list }} + ['{{ item.private_ip }}']"
+      with_items: "{{ ec2.instances }}"
+ 
+    - debug:
+        msg: "{{ ip_list }}"
+
+  
+    - name: Add all web instance IPs to host group
+      add_host: hostname={{ item.public_ip }} groupname=webservers
+      with_items: '{{ ec2.instances }}'
+
+    - name: Wait for SSH to come up
+      wait_for: host={{ item.public_dns_name }} port=22 delay=60 timeout=320 state=started
+      with_items: '{{ ec2.instances }}'
+      
+
+
+-----------
+install when you receive boto error after running ansible-playbook .yaml file
+
+pip install --upgrade pip
+
+pip install boto boto3
+
+-----------------
+
+sudo yum install wget
+wget https://bootstrap.pypa.io/get-pip.py
+sudo yum install gcc libffi-devel python-devel openssl-devel
+sudo python get-pip.py
+sudo pip install boto
+
+/// also perform first yum search boto and in the list received, use the option which is displayed. the install that boto.
+re run the command
+
+
+-----------------------output of aboce scenarios-------------------------------------
+
+[root@ip-172-31-26-40 EC2connect]# ansible-playbook AnsibleAWSConnect.yaml
+
+PLAY [Create a new Demo EC2 instance] **********************************************************************************************************************************
+
+TASK [Create an ec2 instance] ******************************************************************************************************************************************
+changed: [localhost]
+
+TASK [debug] ***********************************************************************************************************************************************************
+ok: [localhost] => (item={u'ramdisk': None, u'kernel': None, u'root_device_type': u'ebs', u'private_dns_name': u'ip-172-31-23-8.us-east-2.compute.internal', u'block_device_mapping': {u'/dev/sda1': {u'status': u'attached', u'delete_on_termination': True, u'volume_id': u'vol-09e907f4f0c7ebce2'}}, u'key_name': u'AWS-Demo', u'public_ip': u'52.14.196.62', u'image_id': u'ami-0b500ef59d8335eee', u'tenancy': u'default', u'private_ip': u'172.31.23.8', u'groups': {u'sg-0e33c06a8a1ff81ea': u'launch-wizard-6'}, u'public_dns_name': u'ec2-52-14-196-62.us-east-2.compute.amazonaws.com', u'state_code': 16, u'id': u'i-02d348ece22905f17', u'tags': {u'Name': u'Demo'}, u'placement': u'us-east-2b', u'ami_launch_index': u'0', u'dns_name': u'ec2-52-14-196-62.us-east-2.compute.amazonaws.com', u'region': u'us-east-2', u'ebs_optimized': False, u'launch_time': u'2019-04-14T03:37:17.000Z', u'instance_type': u't2.micro', u'state': u'running', u'architecture': u'x86_64', u'hypervisor': u'xen', u'virtualization_type': u'hvm', u'root_device_name': u'/dev/sda1'}) => {
+    "msg": "172.31.23.8"
+}
+
+TASK [set_fact] ********************************************************************************************************************************************************
+ok: [localhost]
+
+TASK [Construct IP list] ***********************************************************************************************************************************************
+ok: [localhost] => (item={u'ramdisk': None, u'kernel': None, u'root_device_type': u'ebs', u'private_dns_name': u'ip-172-31-23-8.us-east-2.compute.internal', u'block_device_mapping': {u'/dev/sda1': {u'status': u'attached', u'delete_on_termination': True, u'volume_id': u'vol-09e907f4f0c7ebce2'}}, u'key_name': u'AWS-Demo', u'public_ip': u'52.14.196.62', u'image_id': u'ami-0b500ef59d8335eee', u'tenancy': u'default', u'private_ip': u'172.31.23.8', u'groups': {u'sg-0e33c06a8a1ff81ea': u'launch-wizard-6'}, u'public_dns_name': u'ec2-52-14-196-62.us-east-2.compute.amazonaws.com', u'state_code': 16, u'id': u'i-02d348ece22905f17', u'tags': {u'Name': u'Demo'}, u'placement': u'us-east-2b', u'ami_launch_index': u'0', u'dns_name': u'ec2-52-14-196-62.us-east-2.compute.amazonaws.com', u'region': u'us-east-2', u'ebs_optimized': False, u'launch_time': u'2019-04-14T03:37:17.000Z', u'instance_type': u't2.micro', u'state': u'running', u'architecture': u'x86_64', u'hypervisor': u'xen', u'virtualization_type': u'hvm', u'root_device_name': u'/dev/sda1'})
+
+TASK [debug] ***********************************************************************************************************************************************************
+ok: [localhost] => {
+    "msg": ""
+}
+
+TASK [Add all web instance IPs to host group] **************************************************************************************************************************
+changed: [localhost] => (item={u'ramdisk': None, u'kernel': None, u'root_device_type': u'ebs', u'private_dns_name': u'ip-172-31-23-8.us-east-2.compute.internal', u'block_device_mapping': {u'/dev/sda1': {u'status': u'attached', u'delete_on_termination': True, u'volume_id': u'vol-09e907f4f0c7ebce2'}}, u'key_name': u'AWS-Demo', u'public_ip': u'52.14.196.62', u'image_id': u'ami-0b500ef59d8335eee', u'tenancy': u'default', u'private_ip': u'172.31.23.8', u'groups': {u'sg-0e33c06a8a1ff81ea': u'launch-wizard-6'}, u'public_dns_name': u'ec2-52-14-196-62.us-east-2.compute.amazonaws.com', u'state_code': 16, u'id': u'i-02d348ece22905f17', u'tags': {u'Name': u'Demo'}, u'placement': u'us-east-2b', u'ami_launch_index': u'0', u'dns_name': u'ec2-52-14-196-62.us-east-2.compute.amazonaws.com', u'region': u'us-east-2', u'ebs_optimized': False, u'launch_time': u'2019-04-14T03:37:17.000Z', u'instance_type': u't2.micro', u'state': u'running', u'architecture': u'x86_64', u'hypervisor': u'xen', u'virtualization_type': u'hvm', u'root_device_name': u'/dev/sda1'})
+
+TASK [Wait for SSH to come up] *****************************************************************************************************************************************
+ok: [localhost] => (item={u'ramdisk': None, u'kernel': None, u'root_device_type': u'ebs', u'private_dns_name': u'ip-172-31-23-8.us-east-2.compute.internal', u'block_device_mapping': {u'/dev/sda1': {u'status': u'attached', u'delete_on_termination': True, u'volume_id': u'vol-09e907f4f0c7ebce2'}}, u'key_name': u'AWS-Demo', u'public_ip': u'52.14.196.62', u'image_id': u'ami-0b500ef59d8335eee', u'tenancy': u'default', u'private_ip': u'172.31.23.8', u'groups': {u'sg-0e33c06a8a1ff81ea': u'launch-wizard-6'}, u'public_dns_name': u'ec2-52-14-196-62.us-east-2.compute.amazonaws.com', u'state_code': 16, u'id': u'i-02d348ece22905f17', u'tags': {u'Name': u'Demo'}, u'placement': u'us-east-2b', u'ami_launch_index': u'0', u'dns_name': u'ec2-52-14-196-62.us-east-2.compute.amazonaws.com', u'region': u'us-east-2', u'ebs_optimized': False, u'launch_time': u'2019-04-14T03:37:17.000Z', u'instance_type': u't2.micro', u'state': u'running', u'architecture': u'x86_64', u'hypervisor': u'xen', u'virtualization_type': u'hvm', u'root_device_name': u'/dev/sda1'})
+
+PLAY RECAP *************************************************************************************************************************************************************
+localhost                  : ok=7    changed=2    unreachable=0    failed=0
+
+
+
+--------------------------------------------------------------------
+
+Use Case : ROlE
+
+in actual scenarios ROLE is mostly used for automation purpose.
+ansible galaxy.com
+download the role and use for coding.
+
+when u include the role..
+
+its a segregated folder structure
+
+we create roles folder on own. the folder inside it are created automatically. ( tasks, templates, )
+
+i can call one playbook from another one.. i just need to include the main.yml file.
+also i can pass it as command line arguement.
+
+
+
+
+
+
+template is jinja2 template. (template engine from python)
+
+
+template copies from controller to client as well as edit th content.
+
+
+
+
+
+driver.yaml        1. main.yml
+                        |
+                   2. create user.yml
+                        |
+                   3. Install pkg.yml
+                        |
+                      1. install java
+                         unzip
+                      2. check file
+                         /usr/local/apache-tomcat
+                      3.  Download zip of tomcat
+                     
+                      4. unzip
+                     
+                      5. giving permission to files.
+                     
+                     
+Configure tomcat.yml
+
+
+
+
+
+
+github   -> Jenkins
+
+         1. Download src code
+         2. build source code
+         3. ansible playbook < repository can be of any programming language>
+                create instances
+                intall tomcat
+                war file copy
+                start service  ( this all will be happening in cloud)------------------>   [ CLOUD ]
+               
+
+
+
+--jenkins install-----
+
+git clone https://github.com/maheshkharwadkar/devops.git
+cd devops/ansible/e2eproject
+cd roles/tomcat_aws/
+vi defaults/main.yml
+vi tasks/aws-ec2.yml
+ansible-playbook deploy.yml
+
+------------------------------ out put of above program ---------------------------
+
+
+[root@ip-172-31-26-40 ~]# git clone https://github.com/maheshkharwadkar/devops.git
+Cloning into 'devops'...
+remote: Enumerating objects: 31, done.
+remote: Counting objects: 100% (31/31), done.
+remote: Compressing objects: 100% (22/22), done.
+remote: Total 2628 (delta 1), reused 31 (delta 1), pack-reused 2597
+Receiving objects: 100% (2628/2628), 43.50 MiB | 42.46 MiB/s, done.
+Resolving deltas: 100% (565/565), done.
+[root@ip-172-31-26-40 ~]# cd devops/ansible/e2eproject
+[root@ip-172-31-26-40 e2eproject]# cd roles/tomcat_aws/
+[root@ip-172-31-26-40 tomcat_aws]# vi defaults/main.yml
+[root@ip-172-31-26-40 tomcat_aws]# vi t
+tasks/ tests/
+[root@ip-172-31-26-40 tomcat_aws]# vi tasks/aws-ec2.yml
+[root@ip-172-31-26-40 tomcat_aws]# ansible-playbook deploy.yml
+ERROR! the playbook: deploy.yml could not be found
+[root@ip-172-31-26-40 tomcat_aws]# cd..
+-bash: cd..: command not found
+[root@ip-172-31-26-40 tomcat_aws]# cd ..
+[root@ip-172-31-26-40 roles]# cd ..
+[root@ip-172-31-26-40 e2eproject]# ls
+ansible.cfg  deploy.retry  deploy.yml  get-pip.py  roles
+[root@ip-172-31-26-40 e2eproject]# ansible-playbook deploy.yml
+
+PLAY [Create tomcat AWS infrastructure] ********************************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************************************************************
+ok: [localhost]
+
+TASK [tomcat_aws : Create an ec2 instance] *****************************************************************************************************************************
+changed: [localhost]
+
+TASK [tomcat_aws : debug] **********************************************************************************************************************************************
+ok: [localhost] => (item={u'ramdisk': None, u'kernel': None, u'root_device_type': u'ebs', u'private_dns_name': u'ip-172-31-31-62.us-east-2.compute.internal', u'block_device_mapping': {u'/dev/sda1': {u'status': u'attached', u'delete_on_termination': True, u'volume_id': u'vol-02dcd24d65ca90218'}}, u'key_name': u'AWS-Demo', u'public_ip': u'3.16.138.43', u'image_id': u'ami-0b500ef59d8335eee', u'tenancy': u'default', u'private_ip': u'172.31.31.62', u'groups': {u'sg-0e33c06a8a1ff81ea': u'launch-wizard-6'}, u'public_dns_name': u'ec2-3-16-138-43.us-east-2.compute.amazonaws.com', u'state_code': 16, u'id': u'i-0999c490e29d12015', u'tags': {u'Name': u'Demo'}, u'placement': u'us-east-2b', u'ami_launch_index': u'0', u'dns_name': u'ec2-3-16-138-43.us-east-2.compute.amazonaws.com', u'region': u'us-east-2', u'ebs_optimized': False, u'launch_time': u'2019-04-14T05:17:13.000Z', u'instance_type': u't2.micro', u'state': u'running', u'architecture': u'x86_64', u'hypervisor': u'xen', u'virtualization_type': u'hvm', u'root_device_name': u'/dev/sda1'}) => {
+    "msg": "172.31.31.62"
+}
+
+TASK [tomcat_aws : Add all web instance IPs to host group] *************************************************************************************************************
+changed: [localhost] => (item={u'ramdisk': None, u'kernel': None, u'root_device_type': u'ebs', u'private_dns_name': u'ip-172-31-31-62.us-east-2.compute.internal', u'block_device_mapping': {u'/dev/sda1': {u'status': u'attached', u'delete_on_termination': True, u'volume_id': u'vol-02dcd24d65ca90218'}}, u'key_name': u'AWS-Demo', u'public_ip': u'3.16.138.43', u'image_id': u'ami-0b500ef59d8335eee', u'tenancy': u'default', u'private_ip': u'172.31.31.62', u'groups': {u'sg-0e33c06a8a1ff81ea': u'launch-wizard-6'}, u'public_dns_name': u'ec2-3-16-138-43.us-east-2.compute.amazonaws.com', u'state_code': 16, u'id': u'i-0999c490e29d12015', u'tags': {u'Name': u'Demo'}, u'placement': u'us-east-2b', u'ami_launch_index': u'0', u'dns_name': u'ec2-3-16-138-43.us-east-2.compute.amazonaws.com', u'region': u'us-east-2', u'ebs_optimized': False, u'launch_time': u'2019-04-14T05:17:13.000Z', u'instance_type': u't2.micro', u'state': u'running', u'architecture': u'x86_64', u'hypervisor': u'xen', u'virtualization_type': u'hvm', u'root_device_name': u'/dev/sda1'})
+
+TASK [tomcat_aws : Wait for SSH to come up] ****************************************************************************************************************************
+ok: [localhost] => (item={u'ramdisk': None, u'kernel': None, u'root_device_type': u'ebs', u'private_dns_name': u'ip-172-31-31-62.us-east-2.compute.internal', u'block_device_mapping': {u'/dev/sda1': {u'status': u'attached', u'delete_on_termination': True, u'volume_id': u'vol-02dcd24d65ca90218'}}, u'key_name': u'AWS-Demo', u'public_ip': u'3.16.138.43', u'image_id': u'ami-0b500ef59d8335eee', u'tenancy': u'default', u'private_ip': u'172.31.31.62', u'groups': {u'sg-0e33c06a8a1ff81ea': u'launch-wizard-6'}, u'public_dns_name': u'ec2-3-16-138-43.us-east-2.compute.amazonaws.com', u'state_code': 16, u'id': u'i-0999c490e29d12015', u'tags': {u'Name': u'Demo'}, u'placement': u'us-east-2b', u'ami_launch_index': u'0', u'dns_name': u'ec2-3-16-138-43.us-east-2.compute.amazonaws.com', u'region': u'us-east-2', u'ebs_optimized': False, u'launch_time': u'2019-04-14T05:17:13.000Z', u'instance_type': u't2.micro', u'state': u'running', u'architecture': u'x86_64', u'hypervisor': u'xen', u'virtualization_type': u'hvm', u'root_device_name': u'/dev/sda1'})
+
+PLAY [Deploy tomcat service] *******************************************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************************************************************
+ok: [172.31.31.62]
+
+TASK [tomcat : Create tomcat group] ************************************************************************************************************************************
+changed: [172.31.31.62]
+
+TASK [tomcat : Create Athoris User] ************************************************************************************************************************************
+changed: [172.31.31.62]
+
+TASK [tomcat : Install tomcat prerequisits] ****************************************************************************************************************************
+[DEPRECATION WARNING]: Invoking "yum" only once while using a loop via squash_actions is deprecated. Instead of using a loop to supply multiple items and specifying
+`name: "{{ item }}"`, please use `name: ['java-1.7.0-openjdk', 'unzip']` and remove the loop. This feature will be removed in version 2.11. Deprecation warnings can be
+ disabled by setting deprecation_warnings=False in ansible.cfg.
+changed: [172.31.31.62] => (item=[u'java-1.7.0-openjdk', u'unzip'])
+
+TASK [tomcat : stat] ***************************************************************************************************************************************************
+ok: [172.31.31.62]
+
+TASK [tomcat : Fetch Tomcat] *******************************************************************************************************************************************
+changed: [172.31.31.62]
+
+TASK [tomcat : Unpack Tomcat] ******************************************************************************************************************************************
+changed: [172.31.31.62]
+
+TASK [tomcat : Set execute perms] **************************************************************************************************************************************
+changed: [172.31.31.62] => (item=version.sh)
+changed: [172.31.31.62] => (item=tool-wrapper.sh)
+changed: [172.31.31.62] => (item=startup.sh)
+changed: [172.31.31.62] => (item=setclasspath.sh)
+changed: [172.31.31.62] => (item=digest.sh)
+changed: [172.31.31.62] => (item=catalina.sh)
+
+TASK [tomcat : deploy setenv.sh] ***************************************************************************************************************************************
+changed: [172.31.31.62]
+
+TASK [tomcat : Deploy startup script] **********************************************************************************************************************************
+changed: [172.31.31.62]
+
+TASK [copy] ************************************************************************************************************************************************************
+An exception occurred during task execution. To see the full traceback, use -vvv. The error was: If you are using a module and expect the file to exist on the remote, see the remote_src option
+fatal: [172.31.31.62]: FAILED! => {"changed": false, "msg": "Could not find or access '/usr/share/maven3/nvnshoppingcart/target/nvnshoppingcart.war' on the Ansible Controller.\nIf you are using a module and expect the file to exist on the remote, see the remote_src option"}
+        to retry, use: --limit @/root/devops/ansible/e2eproject/deploy.retry
+
+PLAY RECAP *************************************************************************************************************************************************************
+172.31.31.62               : ok=10   changed=8    unreachable=0    failed=1
+localhost                  : ok=5    changed=2    unreachable=0    failed=0
+
+
+
+
+ansible.cfg file in it we have to specify server1.pem file.
+
+
+
+host_key_checking = false
+filter_plugins = filter_plugins
+private_key_file = ~/.ssh/server1.pem  ( this key is used throughout the project )
+
+After making the above change re run the ansible-playook deploy.yml command
+
+[root@ip-172-31-26-40 e2eproject]# ansible-playbook deploy.yml
+
+PLAY [Create tomcat AWS infrastructure] ********************************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************************************************************
+ok: [localhost]
+
+TASK [tomcat_aws : Create an ec2 instance] *****************************************************************************************************************************
+changed: [localhost]
+
+TASK [tomcat_aws : debug] **********************************************************************************************************************************************
+ok: [localhost] => (item={u'ramdisk': None, u'kernel': None, u'root_device_type': u'ebs', u'private_dns_name': u'ip-172-31-25-119.us-east-2.compute.internal', u'block_device_mapping': {u'/dev/sda1': {u'status': u'attached', u'delete_on_termination': True, u'volume_id': u'vol-0070ce719a4b1d184'}}, u'key_name': u'AWS-Demo', u'public_ip': u'3.16.168.219', u'image_id': u'ami-0b500ef59d8335eee', u'tenancy': u'default', u'private_ip': u'172.31.25.119', u'groups': {u'sg-0e33c06a8a1ff81ea': u'launch-wizard-6'}, u'public_dns_name': u'ec2-3-16-168-219.us-east-2.compute.amazonaws.com', u'state_code': 16, u'id': u'i-054281099f16c4ae5', u'tags': {u'Name': u'Demo'}, u'placement': u'us-east-2b', u'ami_launch_index': u'0', u'dns_name': u'ec2-3-16-168-219.us-east-2.compute.amazonaws.com', u'region': u'us-east-2', u'ebs_optimized': False, u'launch_time': u'2019-04-14T05:32:24.000Z', u'instance_type': u't2.micro', u'state': u'running', u'architecture': u'x86_64', u'hypervisor': u'xen', u'virtualization_type': u'hvm', u'root_device_name': u'/dev/sda1'}) => {
+    "msg": "172.31.25.119"
+}
+
+TASK [tomcat_aws : Add all web instance IPs to host group] *************************************************************************************************************
+changed: [localhost] => (item={u'ramdisk': None, u'kernel': None, u'root_device_type': u'ebs', u'private_dns_name': u'ip-172-31-25-119.us-east-2.compute.internal', u'block_device_mapping': {u'/dev/sda1': {u'status': u'attached', u'delete_on_termination': True, u'volume_id': u'vol-0070ce719a4b1d184'}}, u'key_name': u'AWS-Demo', u'public_ip': u'3.16.168.219', u'image_id': u'ami-0b500ef59d8335eee', u'tenancy': u'default', u'private_ip': u'172.31.25.119', u'groups': {u'sg-0e33c06a8a1ff81ea': u'launch-wizard-6'}, u'public_dns_name': u'ec2-3-16-168-219.us-east-2.compute.amazonaws.com', u'state_code': 16, u'id': u'i-054281099f16c4ae5', u'tags': {u'Name': u'Demo'}, u'placement': u'us-east-2b', u'ami_launch_index': u'0', u'dns_name': u'ec2-3-16-168-219.us-east-2.compute.amazonaws.com', u'region': u'us-east-2', u'ebs_optimized': False, u'launch_time': u'2019-04-14T05:32:24.000Z', u'instance_type': u't2.micro', u'state': u'running', u'architecture': u'x86_64', u'hypervisor': u'xen', u'virtualization_type': u'hvm', u'root_device_name': u'/dev/sda1'})
+
+TASK [tomcat_aws : Wait for SSH to come up] ****************************************************************************************************************************
+ok: [localhost] => (item={u'ramdisk': None, u'kernel': None, u'root_device_type': u'ebs', u'private_dns_name': u'ip-172-31-25-119.us-east-2.compute.internal', u'block_device_mapping': {u'/dev/sda1': {u'status': u'attached', u'delete_on_termination': True, u'volume_id': u'vol-0070ce719a4b1d184'}}, u'key_name': u'AWS-Demo', u'public_ip': u'3.16.168.219', u'image_id': u'ami-0b500ef59d8335eee', u'tenancy': u'default', u'private_ip': u'172.31.25.119', u'groups': {u'sg-0e33c06a8a1ff81ea': u'launch-wizard-6'}, u'public_dns_name': u'ec2-3-16-168-219.us-east-2.compute.amazonaws.com', u'state_code': 16, u'id': u'i-054281099f16c4ae5', u'tags': {u'Name': u'Demo'}, u'placement': u'us-east-2b', u'ami_launch_index': u'0', u'dns_name': u'ec2-3-16-168-219.us-east-2.compute.amazonaws.com', u'region': u'us-east-2', u'ebs_optimized': False, u'launch_time': u'2019-04-14T05:32:24.000Z', u'instance_type': u't2.micro', u'state': u'running', u'architecture': u'x86_64', u'hypervisor': u'xen', u'virtualization_type': u'hvm', u'root_device_name': u'/dev/sda1'})
+
+PLAY [Deploy tomcat service] *******************************************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************************************************************
+ok: [172.31.25.119]
+
+TASK [tomcat : Create tomcat group] ************************************************************************************************************************************
+changed: [172.31.25.119]
+
+TASK [tomcat : Create Athoris User] ************************************************************************************************************************************
+changed: [172.31.25.119]
+
+TASK [tomcat : Install tomcat prerequisits] ****************************************************************************************************************************
+[DEPRECATION WARNING]: Invoking "yum" only once while using a loop via squash_actions is deprecated. Instead of using a loop to supply multiple items and specifying
+`name: "{{ item }}"`, please use `name: ['java-1.7.0-openjdk', 'unzip']` and remove the loop. This feature will be removed in version 2.11. Deprecation warnings can be
+ disabled by setting deprecation_warnings=False in ansible.cfg.
+changed: [172.31.25.119] => (item=[u'java-1.7.0-openjdk', u'unzip'])
+
+TASK [tomcat : stat] ***************************************************************************************************************************************************
+ok: [172.31.25.119]
+
+TASK [tomcat : Fetch Tomcat] *******************************************************************************************************************************************
+changed: [172.31.25.119]
+
+TASK [tomcat : Unpack Tomcat] ******************************************************************************************************************************************
+changed: [172.31.25.119]
+
+TASK [tomcat : Set execute perms] **************************************************************************************************************************************
+changed: [172.31.25.119] => (item=version.sh)
+changed: [172.31.25.119] => (item=tool-wrapper.sh)
+changed: [172.31.25.119] => (item=startup.sh)
+changed: [172.31.25.119] => (item=setclasspath.sh)
+changed: [172.31.25.119] => (item=digest.sh)
+changed: [172.31.25.119] => (item=catalina.sh)
+
+TASK [tomcat : deploy setenv.sh] ***************************************************************************************************************************************
+changed: [172.31.25.119]
+
+TASK [tomcat : Deploy startup script] **********************************************************************************************************************************
+changed: [172.31.25.119]
+
+TASK [start tomcat service] ********************************************************************************************************************************************
+changed: [172.31.25.119]
+
+PLAY RECAP *************************************************************************************************************************************************************
+172.31.25.119              : ok=11   changed=9    unreachable=0    failed=0
+localhost                  : ok=5    changed=2    unreachable=0    failed=0
+
+[root@ip-172-31-26-40 e2eproject]# vi deploy.yml
+[root@ip-172-31-26-40 e2eproject]#
+
+
+
+
+
+
+Error received
+
+/usr/local/apache-tomcat-8.0.23/bin/catalina.sh: line 401: /usr/lib/jvm/java-1.7.0-openjdk-1.7.0.171-2.6.13.0.el7_4.x86_64/jre/bin/java: No such file or directory
+
+
+
+check the client and run these commands
+
+[root@ip-172-31-25-119 logs]# vi /etc/systemd/system/tomcat.service
+[root@ip-172-31-25-119 logs]# systemct1 daemon-reload
+-bash: systemct1: command not found
+[root@ip-172-31-25-119 logs]# systemctl daemon-reload
+[root@ip-172-31-25-119 logs]# systemctl start tomcat
+[root@ip-172-31-25-119 logs]# systemctl status tomcat
+● tomcat.service - Apache Tomcat Web Application Container
+   Loaded: loaded (/etc/systemd/system/tomcat.service; disabled; vendor preset: disabled)
+   Active: active (running) since Sun 2019-04-14 05:56:26 UTC; 11s ago
+  Process: 5684 ExecStart=/usr/local/apache-tomcat-8.0.23/bin/startup.sh (code=exited, status=0/SUCCESS)
+ Main PID: 5691 (java)
+   CGroup: /system.slice/tomcat.service
+           └─5691 java -Djava.util.logging.config.file=/usr/local/apache-tomcat-8.0.23/conf/logging.properties -Djava.util.logging.manager=org.apache.juli.ClassLoade...
+
+Apr 14 05:56:26 ip-172-31-25-119.us-east-2.compute.internal systemd[1]: Starting Apache Tomcat Web Application Container...
+Apr 14 05:56:26 ip-172-31-25-119.us-east-2.compute.internal startup.sh[5684]: /usr/local/apache-tomcat-8.0.23/bin/catalina.sh: line 412: /usr/local/apache-tomc...ectory
+Apr 14 05:56:26 ip-172-31-25-119.us-east-2.compute.internal startup.sh[5684]: Tomcat started.
+Apr 14 05:56:26 ip-172-31-25-119.us-east-2.compute.internal systemd[1]: Started Apache Tomcat Web Application Container.
+Hint: Some lines were ellipsized, use -l to show in full.
+
+
+
+
+
+
+
+
+
+
+
+
+we changed java path in the file tomcat.service.j2 file (client)
+
+for automation
+ubuntu machine create
+jenkins install
+ansible install karna hai
+##github repo me code push karna hai
+
+apt get install ansible
+
+change the tomcat.service.j2 me change karna hai... jenkins me ansble install karna hai
+
+
+war deploy jenkins se karna hai.
+
+	
+	
+	
+

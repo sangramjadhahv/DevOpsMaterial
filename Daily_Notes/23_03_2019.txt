@@ -1,0 +1,144 @@
+Create AMI (image of machine) 
+
+- Make status of ubuntu mchine as Stop
+-create Image
+
+Create Auto scaling group
+
+
+7. Create Autoscaling Group   >>> under EC2 Service
+     LC - s3ec2sampleapp  >> (Give this name in create launch Configration
+          Role Name s3sampleapplicationec2  (Select Created IAm role earlier
+     Select Security group- (Existing given to ubuntu instance
+	 
+	 @@@ Till now we have created LC (Launch Configuration)  Now we are on page to create Auto Scaling Group
+     AG Name: s3ec2group
+     Give all the subnets in the region
+     Receive Traffic from one or more Load Balancer
+     Target Group- Ec2S3Group
+     Configure Auto Scaling Policies
+       Increase Group Size
+         CPU utilization >= 60% (uncheck send notification)
+       Decrease Group Size
+         <=30%
+
+>>> Under ASG , 
+Configure Auto Sclaing Group Details-
+Advance >> Target Groups = Click (Auto populate name of group - EC2S3Group
+
+Configure scaling policies
+Scale between - mininum and Maximum configuration
+Metric Type  -Average CPU Utilization
+> Click on one link below on same page
+> Take the Action - 1
+
+Create Alarm -  Actual policies to increate and decrease instance . 
+- For increate rule will be - for 1 instance when 60% utilization reaches 
+uncheck - send notification
+
+>> Configure tags
+
+Name - ASG-Demo
+
+
+- once click on ASG -
+
+To verify Go to Target Groups >> for Created target group - go to Targets tab and here we can see created ASG after some time ( so status of target should be Healthy)
+Second check - Go to ELB and try to access Photo shop app by ELB's DNS name
+
+- Try to upload as many as images and try to increase load on application. So once CPU utilization increases to more than 60% then ASG will create automatic new instance
+- or try to increase load manually - by below
+login to SSH newly created instance by ASG ( i.e ASG Demo) 
+in rrot user command -  
+apt install stress
+stress -c 80
+
+it will increase load ( wait for some time as we have rule to wait 5 mins and utilization is 60%)
+
+
+========================================================
+
+
+
+We are created deleting 
+
+ASG 
+AMi
+ELB
+LC
+Target Group
+
+================================   New Topic
+
+ https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/TroubleshootingInstancesConnecting.html#TroubleshootingInstancesConnectingMindTerm
+ 
+ 
+AWS Lambda 
+
+
+Use to upload or create your function
+
+We will create Lambda function in Python using boto3 library. 
+
+
+Use case - At EOD automation trigger and that we will call the python function and automatically stop all the running instances.
+
+
+
+https://aws.amazon.com/premiumsupport/knowledge-center/start-stop-lambda-cloudwatch/
+
+
+If we have to do without lambda and 
+- Up VM
+- Install python
+- Install pip
+- pip install boto3
+- Copy AWS access key id and Secreate KEy ID  ( from IAM service we will get this ) - this is required to access AWS by programe. 
+Go to IAM role and download security key . (.csv file)
+- Go to cmd in ur machine
+- mkdir .aws
+- go to user directory where .aws is created
+- C:\Users\patils\.aws
+- create file credentials.txt
+
+
+But if we use AWS lambda service , all these things not needed.
+
+Use below site for first function- To access Lambda from AWS
+
+https://aws.amazon.com/premiumsupport/knowledge-center/start-stop-lambda-cloudwatch/
+
+
+
+
+in lambda function 
+Each lambda function has lambda handler which is the entry point of that function
+
+lambda is called serverless computing
+In serverless computing, in serverless word, everything is event and context driven
+even is user perspective and context is from aws perspective.
+
+
+import boto3
+region = 'ap-south-1'
+instances = ['i-086d6bb0d652cb4cb']
+
+def lambda_handler(event, context):
+    ec2 = boto3.client('ec2', region_name=region)
+    ec2.stop_instances(InstanceIds=instances)
+    print 'stopped your instances: ' + str(instances)
+
+
+
+
+Go down and increase time out to 5
+put your instance id -
+take your region ( you will get in lamda url- region)
+
+Test
+
+
+Add Trigger point
+
+Using cloudwatch we have added triger point 
+

@@ -1,0 +1,154 @@
+Jenkins
+adminmk
+admin
+
+    1  cd /opt
+    2  sudo apt update -y
+    3  sudo apt-get update -y
+    4  sudo apt-get install openjdk-8-jdk
+    5  wget -q -O - http://pkg.jenkins-ci.org/debian/jenkins-ci.org.key | sudo apt-key add -
+    6  echo "deb http://pkg.jenkins-ci.org/debian binary/" | sudo tee -a /etc/apt/sources.list.d/jenkins.list
+    7  sudo apt-get update
+    8  sudo apt-get install jenkins
+    9  service jenkins status
+    apt-get install openjdk-8-jdk
+	
+	Install Maven
+	Maven Project - Pet Clinic
+	
+	
+	Dashboard View 
+	
+	--------------------Maven
+
+32 java -version
+33 mvn -v
+34 apt install maven
+35 mvn -v
+36 which maven
+37 which mvn
+38 mvn -v
+39 sudo apt-get remove maven3
+40 sudo apt-get remove maven
+41 sudo add-apt-repository "deb http://ppa.launchpad.net/natecarlson/maven3/ubuntu precise main"
+42 sudo apt-get update
+43 sudo apt-get install maven3
+44 sudo ln -s /usr/share/maven3/bin/mvn /usr/bin/mvn
+45 mvn -v
+46 echo MAVEN_HOME
+47 echo $MAVEN_HOME
+48 echo $JAVA_HOME
+49 which java
+50 which mvn
+51 java -version
+52 mvn -version
+53 echo $$
+54 echo $MAVEN_HOME
+55 export MAVEN_HOME
+56 export MAVEN_HOME=/usr/share/maven3
+57 echo $MAVEN_HOME
+
+----------------------Java Configuration
+sudo apt-get install openjdk-8-jdk
+/usr/lib/jvm/java-8-openjdk-amd64
+
+77 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre
+78 echo $JAVA_HOME
+
+
+
+nexus repository
+https://www.sonatype.com/nexus-repository-sonatype
+
+https://www.sonatype.com/oss-thank-you-tar.gz
+
+
+https://www.sonarqube.org/downloads/
+
+
+https://www.howtoforge.com/tutorial/how-to-install-sonarqube-on-ubuntu-1604/
+
+
+
+
+
+
+
+
+
+
+
+------------Nexus on Windows--------------------
+
+- Install Java
+- Install Jenkins
+https://www.blazemeter.com/blog/how-to-install-jenkins-on-windows
+
+
+- Install Maven
+https://www.mkyong.com/maven/how-to-install-maven-in-windows/
+
+JAVA_HOME=C:\Program Files\Java\jdk1.8.0_191
+MAVEN_HOME=C:\opt\apache-maven-3.6.0\bin
+
+
+1. Install nexus on windows
+https://www.sonatype.com/oss-thank-you-win64.zip
+zip file downloads
+unzip it C:\nexus\
+
+	
+
+
+
+2.cmd -> C:\nexus\nexus-3.11.0-01-win64\nexus-3.11.0-01\bin
+nexus.exe /run
+
+3. Access nexus webportal (admin,admn123)
+localhost:8081
+
+
+4. git clone https://github.com/maheshkharwadkar/mvnrepo.git
+artifactory change
+POM update
+
+5.create settings.xml 
+~/.m2/settings.xml
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.1.0" 
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.1.0 http://maven.apache.org/xsd/settings-1.1.0.xsd">
+    <servers>
+    <server>
+      <id>deployment</id>
+      <username>admin</username>
+      <password>admin123</password>
+    </server>
+    </servers>
+</settings>
+
+6. on nexus
+mobilebank-snap 
+
+7.
+mvn deploy
+
+
+-----------------Sonarcube-------------------------
+
+C:\nexus
+
+C:\Jenkins
+Jenkins_HOME = C:\Users\mahesh_kharwadkar\.jenkins
+
+
+C:\sonarcube
+
+
+Default Password - admin/default
+
+
+Please read this link - https://www.blazemeter.com/blog/how-to-use-the-jenkins-declarative-pipeline
+	

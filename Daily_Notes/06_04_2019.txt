@@ -1,0 +1,835 @@
+@@@@@@@@@@@@@@@@@@@@@    Ansible  Continue @@@@@@@@@@@@@@@@
+For deployment of any App we need to change files, databases, Objects,Registary.....
+Used to configure server with development.
+Ansible focuses on What part and not on How
+
+Ansible is agentless confighuration management. only ssh automation. eg. patching any services . (This is mostly used in Industries)
+
+Agentbase is continious monitoring on server.
+
+
+Ansible termanalogies:- 
+
+Module
+tasks
+play
+playbook
+Role
+
+
+E.g-  Configure apache hadoop cluster.....i.e install Java,...so we need to devide in modules
+
+Refer PPT for Ansible shared by Mahesh 
+
+Dependencies of Ansible are below: 
+
+Jina2 Template : - If there are many files in Webserver and we want to change multiple files e.g ip addresses in files , then we will use this template
+
+Mostly for Web UI . Rather than writing statically , we can do by dynamically. 
+
+
+PyYAML : Ansible uses this library to Parse
+
+Paramiko :- THis is used to SSH connection
+
+Extra  note: - Ansible Tower, which is used to manage multiple projects through UI. If we are managing multiple projects through Ansible, but if we want to use 
+
+
+
+
+
+
+Ansible Architecture: -
+
+We can have Ansible config file from 3 sapce
+
+
+1) Ansible config- this file at installed loaction . This is default location
+2) Also we can have Command line, and override some of the properties
+3) We can have own Ansible.cfg from where we have written code i.e wherever we have project in git hub at that location. Here we can override some of the propoerties from Ansible.cfg that we needed and rest of the propoerties it can take from Default location
+
+
+Inventory:- 
+By default it is present in etc/ansible/host   >>>  .inf format
+In Inventory the logic is how to SSH to machines
+This is used for IP addresses, like how we going to do SSH either passwordless, password authentication
+
+
+
+
+Practical Session :- 
+
+Create two machines in AWS . Both RedHat 7 machines.
+We will make 1 machine as Ansible Conroller and other as Ansible Client.
+
+
+Install Ansible on Controller machine
+
+Ansible Installation
+1. Create a new file called 'ansible.repo' in 
+cd /etc/yum.repos.d
+vi ansible.repo
+
+2. Copy the following content into it:
+[Ansible]
+name = ansible
+baseurl = https://releases.ansible.com/ansible/rpm/release/epel-7-x86_64/
+enabled = 1
+gpgcheck = 0 
+
+3. Run 'yum update'     [This will update machine OS]
+rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+yum -y install ansible
+ansible --version
+
+
+
+After completion of installation -
+
+[root@ip-172-31-16-103 yum.repos.d]# ansible --version
+ansible 2.7.10
+  config file = /etc/ansible/ansible.cfg
+  configured module search path = [u'/root/.ansible/plugins/modules', u'/usr/share/ansible/plugins/modules']
+  ansible python module location = /usr/lib/python2.7/site-packages/ansible
+  executable location = /bin/ansible
+  python version = 2.7.5 (default, Sep 12 2018, 05:31:16) [GCC 4.8.5 20150623 (Red Hat 4.8.5-36)]
+
+
+Refer Word document shared by Sir - Ansible.doc
+
+
+
+e.g from document - Ansible PlayBook
+
+Inside this we have one Playbook. Generally best practice is One Playbook has one Play
+
+
+- Now we can run Ansible in two ways
+
+
+
+
+1) By command line
+
+First we need to update inventory file by adding with our client's privat id
+
+vi /etc/ansible/hosts
+
+Add blelow code at last of file
+
+
+[server]
+172.1.1.1 ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/.ssh/server1.pem
+
+here 'server' is group name
+172.31.19.1  - This is private ip of machine2 i.e Ansible Client machine
+server1.pem - this is pem file of machine 172.31.19.1
+
+
+
+We have to access machine 2 from machine 1, so for first time we can access by machine 2 private key 
+
+vi ~/.ssh/server1.pem
+
+Here paste our existing key pair i.e 'awsdemo.pem' as we are using same key pair for all the aws insatances to connect
+
+
+
+
+- ansible server -m raw -a "uptime"
+
+[root@ip-172-31-16-103 yum.repos.d]# ansible server -m raw -a "uptime"
+172.31.19.1 | CHANGED | rc=0 >>
+ 05:03:44 up  2:07,  2 users,  load average: 0.00, 0.01, 0.04
+Shared connection to 172.31.19.1 closed.
+
+-ansible server --sudo -m raw -a "yum update -y"
+
+above command will update on second machine from 1 machine
+
+===================================================================
+
+- UseCase :- Write playbook on contoller so that install Httpd on client machine
+
+
+[root@ip-172-31-16-103 yum.repos.d]# mkdir -p /opt/anisble-demo && cd /opt/anisble-demo
+
+vi install-http.yaml    >> this is playbook
+
+---
+- hosts: server
+
+  tasks:
+    - name:   installing httpd
+      yum:    pkg=httpd state=installed
+      become: true
+
+
+
+Now run below command
+
+ansible-playbook install-http.yaml -vv
+
+hosts : server    >>> sever is name of group we provided in inventory .>>>  /etc/ansible/hosts
+
+[root@ip-172-31-16-103 ansible]# pwd
+/etc/ansible
+
+[root@ip-172-31-16-103 ansible]# vi hosts
+
+
+[server]
+172.31.19.1 ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/.ssh/server1.pem
+
+
+Output of above -
+
+
+[root@ip-172-31-16-103 anisble-demo]# ansible-playbook install-http.yaml -vv
+ansible-playbook 2.7.10
+  config file = /etc/ansible/ansible.cfg
+  configured module search path = [u'/root/.ansible/plugins/modules', u'/usr/share/ansible/plugins/modules']
+  ansible python module location = /usr/lib/python2.7/site-packages/ansible
+  executable location = /bin/ansible-playbook
+  python version = 2.7.5 (default, Sep 12 2018, 05:31:16) [GCC 4.8.5 20150623 (Red Hat 4.8.5-36)]
+Using /etc/ansible/ansible.cfg as config file
+/etc/ansible/hosts did not meet host_list requirements, check plugin documentation if this is unexpected
+/etc/ansible/hosts did not meet script requirements, check plugin documentation if this is unexpected
+
+PLAYBOOK: install-http.yaml ********************************************************************************************************************************************
+1 plays in install-http.yaml
+
+PLAY [server] **********************************************************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************************************************************
+task path: /opt/anisble-demo/install-http.yaml:2
+ok: [172.31.19.1]
+META: ran handlers
+
+TASK [installing httpd] ************************************************************************************************************************************************
+task path: /opt/anisble-demo/install-http.yaml:5
+changed: [172.31.19.1] => {"changed": true, "msg": "There are unfinished transactions remaining. You might consider running yum-complete-transaction, or \"yum-complete-transaction --cleanup-only\" and \"yum history redo last\", first to finish them. If those don't work you'll have to try removing/installing packages by hand (maybe package-cleanup can help).\nWarning: RPMDB altered outside of yum.\n", "rc": 0, "results": ["Loaded plugins: amazon-id, rhui-lb, search-disabled-repos\nResolving Dependencies\n--> Running transaction check\n---> Package httpd.x86_64 0:2.4.6-88.el7 will be installed\n--> Processing Dependency: httpd-tools = 2.4.6-88.el7 for package: httpd-2.4.6-88.el7.x86_64\n--> Processing Dependency: system-logos >= 7.92.1-1 for package: httpd-2.4.6-88.el7.x86_64\n--> Processing Dependency: /etc/mime.types for package: httpd-2.4.6-88.el7.x86_64\n--> Processing Dependency: libapr-1.so.0()(64bit) for package: httpd-2.4.6-88.el7.x86_64\n--> Processing Dependency: libaprutil-1.so.0()(64bit) for package: httpd-2.4.6-88.el7.x86_64\n--> Running transaction check\n---> Package apr.x86_64 0:1.4.8-3.el7_4.1 will be installed\n---> Package apr-util.x86_64 0:1.5.2-6.el7 will be installed\n---> Package httpd-tools.x86_64 0:2.4.6-88.el7 will be installed\n---> Package mailcap.noarch 0:2.1.41-2.el7 will be installed\n---> Package redhat-logos.noarch 0:70.0.3-7.el7 will be installed\n--> Finished Dependency Resolution\n\nDependencies Resolved\n\n================================================================================\n Package       Arch    Version          Repository                         Size\n================================================================================\nInstalling:\n httpd         x86_64  2.4.6-88.el7     rhui-REGION-rhel-server-releases  1.2 M\nInstalling for dependencies:\n apr           x86_64  1.4.8-3.el7_4.1  rhui-REGION-rhel-server-releases  103 k\n apr-util      x86_64  1.5.2-6.el7      rhui-REGION-rhel-server-releases   92 k\n httpd-tools   x86_64  2.4.6-88.el7     rhui-REGION-rhel-server-releases   90 k\n mailcap       noarch  2.1.41-2.el7     rhui-REGION-rhel-server-releases   31 k\n redhat-logos  noarch  70.0.3-7.el7     rhui-REGION-rhel-server-releases   13 M\n\nTransaction Summary\n================================================================================\nInstall  1 Package (+5 Dependent packages)\n\nTotal download size: 14 M\nInstalled size: 18 M\nDownloading packages:\n--------------------------------------------------------------------------------\nTotal                                               20 MB/s |  14 MB  00:00     \nRunning transaction check\nRunning transaction test\nTransaction test succeeded\nRunning transaction\n  Installing : apr-1.4.8-3.el7_4.1.x86_64                                   1/6 \n  Installing : apr-util-1.5.2-6.el7.x86_64                                  2/6 \n  Installing : httpd-tools-2.4.6-88.el7.x86_64                              3/6 \n  Installing : redhat-logos-70.0.3-7.el7.noarch                             4/6 \n  Installing : mailcap-2.1.41-2.el7.noarch                                  5/6 \n  Installing : httpd-2.4.6-88.el7.x86_64                                    6/6 \n  Verifying  : httpd-tools-2.4.6-88.el7.x86_64                              1/6 \n  Verifying  : mailcap-2.1.41-2.el7.noarch                                  2/6 \n  Verifying  : apr-util-1.5.2-6.el7.x86_64                                  3/6 \n  Verifying  : httpd-2.4.6-88.el7.x86_64                                    4/6 \n  Verifying  : redhat-logos-70.0.3-7.el7.noarch                             5/6 \n  Verifying  : apr-1.4.8-3.el7_4.1.x86_64                                   6/6 \n\nInstalled:\n  httpd.x86_64 0:2.4.6-88.el7                                                   \n\nDependency Installed:\n  apr.x86_64 0:1.4.8-3.el7_4.1              apr-util.x86_64 0:1.5.2-6.el7       \n  httpd-tools.x86_64 0:2.4.6-88.el7         mailcap.noarch 0:2.1.41-2.el7       \n  redhat-logos.noarch 0:70.0.3-7.el7       \n\nComplete!\n"]}
+META: ran handlers
+META: ran handlers
+
+PLAY RECAP *************************************************************************************************************************************************************
+172.31.19.1                : ok=2    changed=1    unreachable=0    failed=0
+
+
+
+
+
+
+>>> In above output - 
+under TASK [installing httpd] 
+
+changed: [172.31.19.1] => {"changed": true,
+
+
+i.e. check value of "changed"
+
+
+META: ran handlers
+- handlers means to do anything after task
+
+
+PLAY RECAP *************************************************************************************************************************************************************
+172.31.19.1                : ok=2    changed=1    unreachable=0    failed=0
+
+
+Ok >> no of tasks
+
+172.31.19.1 >> client ip
+=================================================
+
+
+Scenario 2: 
+
+Now change fiel
+
+---
+- hosts: server
+  gather_facts: no
+  tasks:
+    - name:   installing httpd
+      yum:    pkg=httpd state=installed
+      become: true
+
+
+
+
+
+Run - ansible-playbook install-http.yaml -vv   (-vv is just for verbose , i.e logs)
+
+Output
+
+
+PLAY RECAP *************************************************************************************************************************************************************
+172.31.19.1                : ok=1    changed=0    unreachable=0    failed=0
+
+
+Ok =1 i.e only one task as we have changed playbook to one task as 'no'
+
+
+=========================================
+
+
+Scenario 3:  Start installed httpd on client machine i.e adding new task here
+
+[root@ip-172-31-16-103 anisble-demo]# vi install-http.yaml
+---
+- hosts: server
+  gather_facts: no
+  tasks:
+    - name:   installing httpd
+      yum:    pkg=httpd state=installed
+      become: true
+
+    - name: start httpd service
+      service: name=httpd state=started
+      become: true
+
+
+
+=======================================
+
+Scenario 4-
+
+
+use module Register
+
+Output of script will take as object and in using Debug module we will print that
+
+- first stop httpd on client mahcine
+
+[ec2-user@ip-172-31-19-1 ~]$ sudo service httpd stop
+Redirecting to /bin/systemctl stop httpd.service
+
+
+
+ vi install-http.yaml
+ 
+ ---
+- hosts: server
+  gather_facts: no
+  tasks:
+    - name:   installing httpd
+      yum:    pkg=httpd state=installed
+      become: true
+
+    - name: start httpd service
+      service: name=httpd state=started
+      become: true
+      register: httpd_output
+
+    - name: printing httpd output
+      debug: var=httpd_output
+
+
+
+Run command - ansible-playbook install-http.yaml
+
+
+Output:- 
+
+[root@ip-172-31-16-103 anisble-demo]# ansible-playbook install-http.yaml
+
+PLAY [server] **********************************************************************************************************************************************************
+
+TASK [installing httpd] ************************************************************************************************************************************************
+ok: [172.31.19.1]
+
+TASK [start httpd service] *********************************************************************************************************************************************
+changed: [172.31.19.1]
+
+TASK [printing httpd output] *******************************************************************************************************************************************
+ok: [172.31.19.1] => {
+    "httpd_output": {
+        "changed": true,
+        "failed": false,
+        "name": "httpd",
+        "state": "started",
+        "status": {
+            "ActiveEnterTimestampMonotonic": "0",
+            "ActiveExitTimestampMonotonic": "0",
+            "ActiveState": "inactive",
+            "After": "systemd-journald.socket -.mount basic.target nss-lookup.target system.slice network.target remote-fs.target tmp.mount",
+            "AllowIsolate": "no",
+            "AmbientCapabilities": "0",
+            "AssertResult": "no",
+            "AssertTimestampMonotonic": "0",
+            "Before": "shutdown.target",
+            "BlockIOAccounting": "no",
+            "BlockIOWeight": "18446744073709551615",
+            "CPUAccounting": "no",
+            "CPUQuotaPerSecUSec": "infinity",
+            "CPUSchedulingPolicy": "0",
+            "CPUSchedulingPriority": "0",
+            "CPUSchedulingResetOnFork": "no",
+            "CPUShares": "18446744073709551615",
+            "CanIsolate": "no",
+            "CanReload": "yes",
+            "CanStart": "yes",
+            "CanStop": "yes",
+            "CapabilityBoundingSet": "18446744073709551615",
+            "ConditionResult": "no",
+            "ConditionTimestampMonotonic": "0",
+            "Conflicts": "shutdown.target",
+            "ControlPID": "0",
+            "DefaultDependencies": "yes",
+            "Delegate": "no",
+            "Description": "The Apache HTTP Server",
+            "DevicePolicy": "auto",
+            "Documentation": "man:httpd(8) man:apachectl(8)",
+            "EnvironmentFile": "/etc/sysconfig/httpd (ignore_errors=no)",
+            "ExecMainCode": "0",
+            "ExecMainExitTimestampMonotonic": "0",
+            "ExecMainPID": "0",
+            "ExecMainStartTimestampMonotonic": "0",
+            "ExecMainStatus": "0",
+            "ExecReload": "{ path=/usr/sbin/httpd ; argv[]=/usr/sbin/httpd $OPTIONS -k graceful ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }",
+            "ExecStart": "{ path=/usr/sbin/httpd ; argv[]=/usr/sbin/httpd $OPTIONS -DFOREGROUND ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }",
+            "ExecStop": "{ path=/bin/kill ; argv[]=/bin/kill -WINCH ${MAINPID} ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }",
+            "FailureAction": "none",
+            "FileDescriptorStoreMax": "0",
+            "FragmentPath": "/usr/lib/systemd/system/httpd.service",
+            "GuessMainPID": "yes",
+            "IOScheduling": "0",
+            "Id": "httpd.service",
+            "IgnoreOnIsolate": "no",
+            "IgnoreOnSnapshot": "no",
+            "IgnoreSIGPIPE": "yes",
+            "InactiveEnterTimestampMonotonic": "0",
+            "InactiveExitTimestampMonotonic": "0",
+            "JobTimeoutAction": "none",
+            "JobTimeoutUSec": "0",
+            "KillMode": "control-group",
+            "KillSignal": "18",
+            "LimitAS": "18446744073709551615",
+            "LimitCORE": "18446744073709551615",
+            "LimitCPU": "18446744073709551615",
+            "LimitDATA": "18446744073709551615",
+            "LimitFSIZE": "18446744073709551615",
+            "LimitLOCKS": "18446744073709551615",
+            "LimitMEMLOCK": "65536",
+            "LimitMSGQUEUE": "819200",
+            "LimitNICE": "0",
+            "LimitNOFILE": "4096",
+            "LimitNPROC": "3787",
+            "LimitRSS": "18446744073709551615",
+            "LimitRTPRIO": "0",
+            "LimitRTTIME": "18446744073709551615",
+            "LimitSIGPENDING": "3787",
+            "LimitSTACK": "18446744073709551615",
+            "LoadState": "loaded",
+            "MainPID": "0",
+            "MemoryAccounting": "no",
+            "MemoryCurrent": "18446744073709551615",
+            "MemoryLimit": "18446744073709551615",
+            "MountFlags": "0",
+            "Names": "httpd.service",
+            "NeedDaemonReload": "no",
+            "Nice": "0",
+            "NoNewPrivileges": "no",
+            "NonBlocking": "no",
+            "NotifyAccess": "main",
+            "OOMScoreAdjust": "0",
+            "OnFailureJobMode": "replace",
+            "PermissionsStartOnly": "no",
+            "PrivateDevices": "no",
+            "PrivateNetwork": "no",
+            "PrivateTmp": "yes",
+            "ProtectHome": "no",
+            "ProtectSystem": "no",
+            "RefuseManualStart": "no",
+            "RefuseManualStop": "no",
+            "RemainAfterExit": "no",
+            "Requires": "-.mount basic.target",
+            "RequiresMountsFor": "/var/tmp",
+            "Restart": "no",
+            "RestartUSec": "100ms",
+            "Result": "success",
+            "RootDirectoryStartOnly": "no",
+            "RuntimeDirectoryMode": "0755",
+            "SameProcessGroup": "no",
+            "SecureBits": "0",
+            "SendSIGHUP": "no",
+            "SendSIGKILL": "yes",
+            "Slice": "system.slice",
+            "StandardError": "inherit",
+            "StandardInput": "null",
+            "StandardOutput": "journal",
+            "StartLimitAction": "none",
+            "StartLimitBurst": "5",
+            "StartLimitInterval": "10000000",
+            "StartupBlockIOWeight": "18446744073709551615",
+            "StartupCPUShares": "18446744073709551615",
+            "StatusErrno": "0",
+            "StopWhenUnneeded": "no",
+            "SubState": "dead",
+            "SyslogLevelPrefix": "yes",
+            "SyslogPriority": "30",
+            "SystemCallErrorNumber": "0",
+            "TTYReset": "no",
+            "TTYVHangup": "no",
+            "TTYVTDisallocate": "no",
+            "TasksAccounting": "no",
+            "TasksCurrent": "18446744073709551615",
+            "TasksMax": "18446744073709551615",
+            "TimeoutStartUSec": "1min 30s",
+            "TimeoutStopUSec": "1min 30s",
+            "TimerSlackNSec": "50000",
+            "Transient": "no",
+            "Type": "notify",
+            "UMask": "0022",
+            "UnitFilePreset": "disabled",
+            "UnitFileState": "disabled",
+            "Wants": "system.slice",
+            "WatchdogTimestampMonotonic": "0",
+            "WatchdogUSec": "0"
+        }
+    }
+}
+
+PLAY RECAP *************************************************************************************************************************************************************
+172.31.19.1                : ok=3    changed=1    unreachable=0    failed=0
+
+
+
+
+
+
+
+
+================================
+
+Sneraio 5: Print message as Automation complete
+
+[root@ip-172-31-16-103 anisble-demo]# cat install-http.yaml
+---
+- hosts: server
+  gather_facts: no
+  tasks:
+    - name:   installing httpd
+      yum:    pkg=httpd state=installed
+      become: true
+
+    - name: start httpd service
+      service: name=httpd state=started
+      become: true
+      register: httpd_output
+
+    - name: printing httpd output
+      debug: var=httpd_output
+
+    - name: printing status
+      debug: msg="My automation is successful"
+      when: httpd_output is success
+
+
+
+
+
+
+
+
+
+[root@ip-172-31-16-103 anisble-demo]# ansible-playbook install-http.yaml
+
+PLAY [server] **********************************************************************************************************************************************************
+
+TASK [installing httpd] ************************************************************************************************************************************************
+ok: [172.31.19.1]
+
+TASK [start httpd service] *********************************************************************************************************************************************
+ok: [172.31.19.1]
+
+TASK [printing httpd output] *******************************************************************************************************************************************
+ok: [172.31.19.1] => {
+    "httpd_output": {
+        "changed": false,
+        "failed": false,
+        "name": "httpd",
+        "state": "started",
+        "status": {
+            "ActiveEnterTimestamp": "Sat 2019-04-06 05:52:33 UTC",
+            "ActiveEnterTimestampMonotonic": "10587733008",
+            "ActiveExitTimestampMonotonic": "0",
+            "ActiveState": "active",
+            "After": "nss-lookup.target -.mount tmp.mount basic.target system.slice systemd-journald.socket network.target remote-fs.target",
+            "AllowIsolate": "no",
+            "AmbientCapabilities": "0",
+            "AssertResult": "yes",
+            "AssertTimestamp": "Sat 2019-04-06 05:52:33 UTC",
+            "AssertTimestampMonotonic": "10587686385",
+            "Before": "shutdown.target",
+            "BlockIOAccounting": "no",
+            "BlockIOWeight": "18446744073709551615",
+            "CPUAccounting": "no",
+            "CPUQuotaPerSecUSec": "infinity",
+            "CPUSchedulingPolicy": "0",
+            "CPUSchedulingPriority": "0",
+            "CPUSchedulingResetOnFork": "no",
+            "CPUShares": "18446744073709551615",
+            "CanIsolate": "no",
+            "CanReload": "yes",
+            "CanStart": "yes",
+            "CanStop": "yes",
+            "CapabilityBoundingSet": "18446744073709551615",
+            "ConditionResult": "yes",
+            "ConditionTimestamp": "Sat 2019-04-06 05:52:33 UTC",
+            "ConditionTimestampMonotonic": "10587686384",
+            "Conflicts": "shutdown.target",
+            "ControlGroup": "/system.slice/httpd.service",
+            "ControlPID": "0",
+            "DefaultDependencies": "yes",
+            "Delegate": "no",
+            "Description": "The Apache HTTP Server",
+            "DevicePolicy": "auto",
+            "Documentation": "man:httpd(8) man:apachectl(8)",
+            "EnvironmentFile": "/etc/sysconfig/httpd (ignore_errors=no)",
+            "ExecMainCode": "0",
+            "ExecMainExitTimestampMonotonic": "0",
+            "ExecMainPID": "14139",
+            "ExecMainStartTimestamp": "Sat 2019-04-06 05:52:33 UTC",
+            "ExecMainStartTimestampMonotonic": "10587687415",
+            "ExecMainStatus": "0",
+            "ExecReload": "{ path=/usr/sbin/httpd ; argv[]=/usr/sbin/httpd $OPTIONS -k graceful ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }",
+            "ExecStart": "{ path=/usr/sbin/httpd ; argv[]=/usr/sbin/httpd $OPTIONS -DFOREGROUND ; ignore_errors=no ; start_time=[Sat 2019-04-06 05:52:33 UTC] ; stop_time=[n/a] ; pid=14139 ; code=(null) ; status=0/0 }",
+            "ExecStop": "{ path=/bin/kill ; argv[]=/bin/kill -WINCH ${MAINPID} ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }",
+            "FailureAction": "none",
+            "FileDescriptorStoreMax": "0",
+            "FragmentPath": "/usr/lib/systemd/system/httpd.service",
+            "GuessMainPID": "yes",
+            "IOScheduling": "0",
+            "Id": "httpd.service",
+            "IgnoreOnIsolate": "no",
+            "IgnoreOnSnapshot": "no",
+            "IgnoreSIGPIPE": "yes",
+            "InactiveEnterTimestampMonotonic": "0",
+            "InactiveExitTimestamp": "Sat 2019-04-06 05:52:33 UTC",
+            "InactiveExitTimestampMonotonic": "10587687449",
+            "JobTimeoutAction": "none",
+            "JobTimeoutUSec": "0",
+            "KillMode": "control-group",
+            "KillSignal": "18",
+            "LimitAS": "18446744073709551615",
+            "LimitCORE": "18446744073709551615",
+            "LimitCPU": "18446744073709551615",
+            "LimitDATA": "18446744073709551615",
+            "LimitFSIZE": "18446744073709551615",
+            "LimitLOCKS": "18446744073709551615",
+            "LimitMEMLOCK": "65536",
+            "LimitMSGQUEUE": "819200",
+            "LimitNICE": "0",
+            "LimitNOFILE": "4096",
+            "LimitNPROC": "3787",
+            "LimitRSS": "18446744073709551615",
+            "LimitRTPRIO": "0",
+            "LimitRTTIME": "18446744073709551615",
+            "LimitSIGPENDING": "3787",
+            "LimitSTACK": "18446744073709551615",
+            "LoadState": "loaded",
+            "MainPID": "14139",
+            "MemoryAccounting": "no",
+            "MemoryCurrent": "18446744073709551615",
+            "MemoryLimit": "18446744073709551615",
+            "MountFlags": "0",
+            "Names": "httpd.service",
+            "NeedDaemonReload": "no",
+            "Nice": "0",
+            "NoNewPrivileges": "no",
+            "NonBlocking": "no",
+            "NotifyAccess": "main",
+            "OOMScoreAdjust": "0",
+            "OnFailureJobMode": "replace",
+            "PermissionsStartOnly": "no",
+            "PrivateDevices": "no",
+            "PrivateNetwork": "no",
+            "PrivateTmp": "yes",
+            "ProtectHome": "no",
+            "ProtectSystem": "no",
+            "RefuseManualStart": "no",
+            "RefuseManualStop": "no",
+            "RemainAfterExit": "no",
+            "Requires": "-.mount basic.target",
+            "RequiresMountsFor": "/var/tmp",
+            "Restart": "no",
+            "RestartUSec": "100ms",
+            "Result": "success",
+            "RootDirectoryStartOnly": "no",
+            "RuntimeDirectoryMode": "0755",
+            "SameProcessGroup": "no",
+            "SecureBits": "0",
+            "SendSIGHUP": "no",
+            "SendSIGKILL": "yes",
+            "Slice": "system.slice",
+            "StandardError": "inherit",
+            "StandardInput": "null",
+            "StandardOutput": "journal",
+            "StartLimitAction": "none",
+            "StartLimitBurst": "5",
+            "StartLimitInterval": "10000000",
+            "StartupBlockIOWeight": "18446744073709551615",
+            "StartupCPUShares": "18446744073709551615",
+            "StatusErrno": "0",
+            "StatusText": "Total requests: 0; Current requests/sec: 0; Current traffic:   0 B/sec",
+            "StopWhenUnneeded": "no",
+            "SubState": "running",
+            "SyslogLevelPrefix": "yes",
+            "SyslogPriority": "30",
+            "SystemCallErrorNumber": "0",
+            "TTYReset": "no",
+            "TTYVHangup": "no",
+            "TTYVTDisallocate": "no",
+            "TasksAccounting": "no",
+            "TasksCurrent": "18446744073709551615",
+            "TasksMax": "18446744073709551615",
+            "TimeoutStartUSec": "1min 30s",
+            "TimeoutStopUSec": "1min 30s",
+            "TimerSlackNSec": "50000",
+            "Transient": "no",
+            "Type": "notify",
+            "UMask": "0022",
+            "UnitFilePreset": "disabled",
+            "UnitFileState": "disabled",
+            "Wants": "system.slice",
+            "WatchdogTimestamp": "Sat 2019-04-06 05:52:33 UTC",
+            "WatchdogTimestampMonotonic": "10587732964",
+            "WatchdogUSec": "0"
+        }
+    }
+}
+
+TASK [printing status] *************************************************************************************************************************************************
+ok: [172.31.19.1] => {
+    "msg": "My automation is successful"
+}
+
+PLAY RECAP *************************************************************************************************************************************************************
+172.31.19.1                : ok=4    changed=0    unreachable=0    failed=0
+
+
+
+
+========================================================================
+
+ Scenario 6 : Do all things by passwordless
+ 
+ - for this we need to copy public key of controller to client
+ 
+ Go to controller and generate key
+ 
+ ssh-keygen -t rsa
+
+
+vi passwordless-demo
+
+---
+- hosts: server
+
+  tasks:
+    - name: copy authorizedkey
+      authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+      become: true
+
+
+
+run - ansible-playbook passwordless-demo
+
+
+Output- 
+
+PLAY [servers] *********************************************************************************************************************************************************
+skipping: no hosts matched
+
+PLAY RECAP *************************************************************************************************************************************************************
+
+[root@ip-172-31-16-103 anisble-demo]# vi passwordless-demo
+[root@ip-172-31-16-103 anisble-demo]#
+[root@ip-172-31-16-103 anisble-demo]# ansible-playbook passwordless-demo
+
+PLAY [server] **********************************************************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************************************************************
+ok: [172.31.19.1]
+
+TASK [copy authorizedkey] **********************************************************************************************************************************************
+changed: [172.31.19.1]
+
+PLAY RECAP *************************************************************************************************************************************************************
+172.31.19.1                : ok=2    changed=1    unreachable=0    failed=0
+
+[root@ip-172-31-16-103 anisble-demo]#
+
+
+
+Now try to do ssh from controller
+
+[root@ip-172-31-16-103 anisble-demo]# ssh root@172.31.19.1
+[root@ip-172-31-19-1 ~]# exit
+logout
+Connection to 172.31.19.1 closed.
+
+===================================================================================================
+
+Final Output of program
+
+
+[root@ip-172-31-16-103 nginx-demo]# ansible-playbook install-nginx.yml
+
+PLAY [server] **********************************************************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************************************************************
+ok: [172.31.19.1]
+
+TASK [Install wget] ****************************************************************************************************************************************************
+ok: [172.31.19.1]
+
+TASK [Download EPEL RPM] ***********************************************************************************************************************************************
+ok: [172.31.19.1]
+
+TASK [Install EPEL repo] ***********************************************************************************************************************************************
+ [WARNING]: Consider using the yum, dnf or zypper module rather than running 'rpm'.  If you need to use command because yum, dnf or zypper is insufficient you can add
+'warn: false' to this command task or set 'command_warnings=False' in ansible.cfg to get rid of this message.
+
+fatal: [172.31.19.1]: FAILED! => {"changed": true, "cmd": "rpm -Uvh /tmp/epel-release-latest-7.noarch.rpm", "delta": "0:00:00.038964", "end": "2019-04-13 05:59:51.608355", "msg": "non-zero return code", "rc": 1, "start": "2019-04-13 05:59:51.569391", "stderr": "\tpackage epel-release-7-11.noarch is already installed", "stderr_lines": ["\tpackage epel-release-7-11.noarch is already installed"], "stdout": "Preparing...                          ########################################", "stdout_lines": ["Preparing...                          ########################################"]}
+...ignoring
+
+TASK [Install nginx.] **************************************************************************************************************************************************
+ok: [172.31.19.1] => (item=nginx)
+ok: [172.31.19.1] => (item=nano)
+ok: [172.31.19.1] => (item=curl)
+
+TASK [Create website directory] ****************************************************************************************************************************************
+ok: [172.31.19.1]
+
+TASK [Copy nginx config files (main config and vhost config)] **********************************************************************************************************
+ok: [172.31.19.1] => (item={u'dest': u'/etc/nginx/nginx.conf', u'src': u'config/nginx.conf'})
+ok: [172.31.19.1] => (item={u'dest': u'/etc/nginx/conf.d/mywebsite.conf', u'src': u'config/mywebsite.conf'})
+ok: [172.31.19.1] => (item={u'dest': u'/var/www/mywebsite/index.html', u'src': u'config/index.html'})
+
+TASK [Check if default nginx vhost still exists] ***********************************************************************************************************************
+ok: [172.31.19.1]
+
+TASK [Remove default nginx vhost configuration] ************************************************************************************************************************
+skipping: [172.31.19.1]
+
+TASK [Start nginx at boot + make sure it's running right now.] *********************************************************************************************************
+changed: [172.31.19.1]
+
+PLAY RECAP *************************************************************************************************************************************************************
+172.31.19.1                : ok=9    changed=2    unreachable=0    failed=0
+
+[root@ip-172-31-16-103 nginx-demo]#
+
+
+Note: - To verify, try to hit Public IP of Client in browser and one static page should display.
+
+if connection timeout is appearing then Check inbout rules for client machine. HTTP should be there in rule.
+
+=============================
+ 

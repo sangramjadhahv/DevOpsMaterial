@@ -1,0 +1,34 @@
+Passwordless authentication 
+
+access M2 machine from M1 machine
+
+Steps on M1 -
+
+- login to ec2-user
+-go to root , by using  sudo su -
+-ssh-keygen -t rsa
+
+- above command will generate file id_rsa.pub 
+
+view it by cat /root/.ssh/id_rsa.pub
+
+copy this content except last line i.e root@id....
+
+- Login to M2 by ece-user
+- go to root
+- cd/root/.ssh
+- ls
+- vi authorised keygen
+- press i for inser mode
+- go to last to the file and paste copied data from M1 machine
+- wq!
+
+- Now go to M1 and try to connect to M2 without password
+
+ssh root@M2_private_IP
+ssh root@172.31.18.210
+
+
+
+
+

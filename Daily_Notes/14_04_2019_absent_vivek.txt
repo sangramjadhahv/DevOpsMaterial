@@ -1,0 +1,215 @@
+-------------------Ansible aws----------------------------
+- name: Create a new Demo EC2 instance
+  hosts: localhost
+  gather_facts: False
+
+  vars:
+      region: us-east-1
+      instance_type: t2.micro
+      ami: ami-26ebbc5c  # Redhat controller
+      keypair: pk-key # pem file name our
+
+  tasks:
+
+    - name: Create an ec2 instance
+      ec2:
+         key_name: "{{ keypair }}"
+         aws_access_key: "AKIAJKCHVVFVMFG7KMNA"
+         aws_secret_key: "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"
+         group: Kubectl  # security group name #launch wizard
+         instance_type: "{{ instance_type}}"
+         image: "{{ ami }}"
+         wait: true
+         region: "{{ region }}"
+         count: 1  # default
+         count_tag:
+            Name: "Demo"
+         instance_tags:
+            Name: "Demo"
+         vpc_subnet_id: "subnet-8f3a52f5"
+         assign_public_ip: yes
+      register: ec2
+    
+    - debug:
+        msg: "{{ item['private_ip'] }}"
+      with_items: "{{ ec2.instances }}"
+
+    - set_fact: ip_list= "[]"
+   
+    - name: Construct IP list
+      set_fact: ip_list= "{{ ip_list }} + ['{{ item.private_ip }}']"
+      with_items: "{{ ec2.instances }}"
+ 
+    - debug:
+        msg: "{{ ip_list }}"
+
+   
+    - name: Add all web instance IPs to host group
+      add_host: hostname={{ item.public_ip }} groupname=webservers
+      with_items: '{{ ec2.instances }}'
+
+    - name: Wait for SSH to come up
+      wait_for: host={{ item.public_dns_name }} port=22 delay=60 timeout=320 state=started
+      with_items: '{{ ec2.instances }}'
+       
+
+- error will come boto3 
+-----------
+yum search boto
+list will come ,, list 
+pip install --upgrade pip
+
+pip install boto,boto3
+
+yum search boto
+already boto
+-----------------
+
+sudo yum install wget
+wget https://bootstrap.pypa.io/get-pip.py
+sudo yum install gcc libffi-devel python-devel openssl-devel
+sudo python get-pip.py
+
+
+
+https://github.com/maheshkharwadkar/devops/blob/master/ansible/firstplaybook/roles/tomcat/tasks/install_packages.yml
+
+git clone https://github.com/maheshkharwadkar/devops.git
+cd devops/ansible/e2eproject
+cd roles/tomcat_aws/
+vi defaults/main.yml
+vi tasks/aws-ec2.yml
+ansible-playbook deploy.yml
+
+
+
+ vi /etc/systemd/system/tomcat.service
+/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.211-2.6.17.1.el7_6.x86_64/jre
+
+
+ systemctl daemon-reload
+ systemctl start tomcat
+ systemctl status tomcat
+ 
+ 
+ 
+ 
+ =============================================   Vivek Notes ============
+ 
+ 
+ ansible aws module
+
+create ec2 instances through ansible
+
+you need access key id, secret access key 
+
+pass the private ip address and print it
+
+Change below parameters
+region, instance_type, count, ami, keypair, aws_access_key, aws_secret_key, group, vpc_subnet_id
+
+"ec2" is the module ... and key_name, aws_access_key, aws_secret_key etc. are all parameters
+
+yum search boto
+yum install python-boto.noarch
+
+
+--------------------
+
+sudo yum install wget
+wget https://bootstrap.pypa.io/get-pip.py
+sudo yum install gcc libffi-devel python-devel openssl-devel
+sudo python get-pip.py
+sudo pip install boto
+
+=========================================================
+
+
+
+For small automation tasks, what we are doing is fine.
+In real world, people use role
+Role increases reusability of your ansible automation
+
+Roles has a structure.
+
+
+
+driver script .. driver .. will call this role .. role to create hadoop cluster, 
+
+
+ansible galxy site has all reusable roles
+
+
+how to see the role
+ 
+you have driver script in which your include role 
+as soon it gets role .. it goes to role/tasks/main.yml ... where you can write your code
+
+under role directory ... you have different folders for deifferent purposes ... vars, tests, tasks, templates, handlers
+template are used to configue your douments .. like edit config files
+handlers .. event based action
+every folder will have main.yml ... which will have youor main logic
+
+roles gives you segragted folder structure .. just like java package
+
+USE CASE: Create tomcat role
+
+Create users, installpackages, configure
+create ec2 instance
+create dynamic inventory .. (in-memory .. not in a file)
+ssh .. and install tomcat .. copy war .. your app is  ready
+
+
+for installion of tomcat .. we have created one role
+
+you can pass argumnets from one playbook to another playbook
+or you  can just include playbook
+
+Go through the gitlab folder structure
+
+https://github.com/maheshkharwadkar/devops/blob/master/ansible/firstplaybook/roles/tomcat/tasks/install_packages.yml
+
+template is jinja2 template does 2 things
+it copies templates from controller to client
+and edits templates
+
+jinja2 is template rendering engine
+
+
+git clone https://github.com/maheshkharwadkar/devops.git
+cd devops/ansible/e2eproject
+cd roles/tomcat_aws/
+vi defaults/main.yml
+vi tasks/aws-ec2.yml
+vi ansible.cfg ... ignore first 2 lines ... host_key_checking = False .. means do not want that pop up while connecting
+comment copy task
+#  - copy:
+#      src: /usr/share/maven3/nvnshoppingcart/target/nvnshoppingcart.war
+#      dest: /usr/local/apache-tomcat-8.0.23/webapps/
+#      mode: 0777
+#      owner: root
+#      group: root
+
+/usr/local/apache-tomcat-8.0.23/logs/catalina.out
+
+vi /etc/systemd/system/tomcat.service
+#Environment=JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.171-2.6.13.0.el7_4.x86_64/jre
+Environment=JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.211-2.6.17.1.el7_6.x86_64/jre
+
+ansible-playbook deploy.yml
+
+
+
+Change AWS credentials etc ... same as earlier
+
+
+CI CD concept: See CI CD diagram
+As soon as war file is ready .. my jenkins job will be triggered which will create ec2 instance and deploy that war file
+
+Create Ubuntu instance
+Install Jenkins
+Install Ansible .. apt-get install ansible
+Push your tomcat wala project to git
+change your code 
+
+

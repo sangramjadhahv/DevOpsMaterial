@@ -1,0 +1,412 @@
+Scenario:- Access .csv file from one machine here M1 so it is a automation server and by accessing csv file where we have saved other machines IP addresses we can connect to other machines by reading csv file
+
+Create Alias of M2 in M1 so that we can access by its name
+
+[root@ip-172-31-29-73 ~]# echo 172.31.18.210 server01 | sudo tee -a /etc/hosts
+172.31.18.210 server01
+[root@ip-172-31-29-73 ~]#
+
+- Here we have given server01 name to M2 by command echo 172.31.18.210 server01 | sudo tee -a /etc/hosts  >>>> 172.31.18.210 is priate key of M2
+
+
+- To check m2 machine uptime
+
+command  - ssh root@server01 uptime
+ >>> server01 is alias name of other machine. uptime command is used to check since when machine is UP. If we get permission issue, that means host key checking (StrictHostKeyChecking) is disabled in ssh_config. This is linux security feature.
+ for this error * Google it by "Host key checking"
+
+ssh root@server01 uptime
+The authenticity of host 'server01 (172.31.18.210)' can't be established.
+ECDSA key fingerprint is SHA256:rtmAgTeyJ2jKBTnuiU2iodUGGHrY60rraXRnKonlOKA.
+ECDSA key fingerprint is MD5:d2:94:9f:2f:81:ad:a8:76:90:18:35:16:96:e1:1d:24.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added 'server01' (ECDSA) to the list of known hosts.
+ 03:41:53 up 23 min,  1 user,  load average: 0.00, 0.01, 0.03
+
+
+- Create file
+ vi /opt/servers
+
+- enter server01 in file 
+
+
+[root@ip-172-31-29-73 ~]# for SERVER in $(cat /opt/servers)
+> do
+> ssh ${SERVER} hostname
+> ssh ${SERVER} uptime
+> done
+ip-172-31-18-210.ap-south-1.compute.internal
+ 04:24:20 up  1:05,  1 user,  load average: 0.00, 0.01, 0.04
+[root@ip-172-31-29-73 ~]#
+
+
+==== To check M2 is pingable from M1
+ Go to security group attached for machine M1 and go to inbound >> Add rule
+ 
+ 
+ 
+ 
+ 
+ 
+ ------------Ping Script---------------------
+ #!/bin/bash
+
+#This Script will ping list of servers and list the status
+
+SERVER_FILE="/opt/servers"
+
+if [[ ! -e "${SERVER_FILE}" ]]
+then
+  echo "Can not Open ${SERVER_FILE}." >&2
+  exit 1
+fi
+
+for SERVER in $(cat ${SERVER_FILE})
+do
+  echo "Pinging ${SERVER}"
+  ping -c 1 ${SERVER} &> /dev/null
+  if [[ "${?}" -ne 0 ]]
+  then 
+    echo "${SERVER} is down."
+  else
+    echo "${SERVER} up"
+  fi
+done  
+
+
+
+Note:- 
+/dev/null  -- output not dispaying
+${?} >> gives last command output
+
+
+
+Output:- 
+
+[root@ip-172-31-29-73 shellscripting]# bash PingScript
+Pinging server01
+server01 up
+[root@ip-172-31-29-73 shellscripting]#
+
+
+
+=======
+
+Below script will access external file and do proecessing on it
+
+
+ ------------------runevery-where.sh-----------------------
+ #!/bin/bash
+
+# A list of servers, one per line.
+SERVER_LIST='/opt/servers'
+
+# Options for the ssh command.
+SSH_OPTIONS='-o ConnectTimeout=2'
+
+usage() {
+  # Display the usage and exit.
+  echo "Usage: ${0} [-nsv] [-f FILE] COMMAND" >&2
+  echo 'Executes COMMAND as a single command on every server.' >&2
+  echo "  -f FILE  Use FILE for the list of servers. Default: ${SERVER_LIST}." >&2
+  echo '  -n       Dry run mode. Display the COMMAND that would have been executed and exit.' >&2
+  echo '  -s       Execute the COMMAND using sudo on the remote server.' >&2
+  echo '  -v       Verbose mode. Displays the server name before executing COMMAND.' >&2
+  exit 1
+}
+
+# Make sure the script is not being executed with superuser privileges.
+if [[ "${UID}" -eq 0 ]]
+then
+  echo 'Do not execute this script as root. Use the -s option instead.' >&2
+  usage
+fi
+
+# Parse the options.
+while getopts f:nsv OPTION
+do
+  case ${OPTION} in
+    f) SERVER_LIST="${OPTARG}" ;;
+    n) DRY_RUN='true' ;;
+    s) SUDO='sudo' ;;
+    v) VERBOSE='true' ;;
+    ?) usage ;;
+  esac
+done
+
+# Remove the options while leaving the remaining arguments.
+shift "$(( OPTIND - 1 ))"
+
+# If the user doesn't supply at least one argument, give them help.
+if [[ "${#}" -lt 1 ]]
+then
+  usage
+fi
+
+# Anything that remains on the command line is to be treated as a single command.
+COMMAND="${@}"
+
+# Make sure the SERVER_LIST file exists.
+if [[ ! -e "${SERVER_LIST}" ]]
+then
+  echo "Cannot open server list file ${SERVER_LIST}." >&2
+  exit 1
+fi
+
+# Expect the best, prepare for the worst.
+EXIT_STATUS='0'
+
+# Loop through the SERVER_LIST
+for SERVER in $(cat ${SERVER_LIST})
+do
+  if [[ "${VERBOSE}" = 'true' ]]
+  then
+    echo "${SERVER}"
+  fi
+
+  SSH_COMMAND="ssh ${SSH_OPTIONS} ${SERVER} ${SUDO} ${COMMAND}"
+ 
+  # If it's a dry run, don't execute anything, just echo it.
+  if [[ "${DRY_RUN}" = 'true' ]]
+  then
+    echo "DRY RUN: ${SSH_COMMAND}"
+  else
+    ${SSH_COMMAND}
+    SSH_EXIT_STATUS="${?}"
+
+    # Capture any non-zero exit status from the SSH_COMMAND and report to the user.
+    if [[ "${SSH_EXIT_STATUS}" -ne 0 ]]
+    then
+      EXIT_STATUS=${SSH_EXIT_STATUS}
+      echo "Execution on ${SERVER} failed." >&2
+    fi 
+  fi
+done
+
+exit ${EXIT_STATUS}
+
+
+
+
+--------------------above Script Testing-------------------------------
+ 
+   ./runevery-where.sh -n hostname
+  ./runevery-where.sh -nsv uptime
+  ./runevery-where.sh -ns id
+  ./runevery-where.sh -sv id
+  ./runevery-where.sh -f test hostname
+  ./runevery-where.sh -f /path/to/nowhere hostname
+  ./runevery-where.sh -s useradd test1
+  ./runevery-where.sh id test1
+  echo "'Test two'"
+  echo '"Test two"'
+  ./runevery-where.sh -ns 'useradd -c "Test two" test2'
+  ./runevery-where.sh -s 'useradd -c "Test two" test2'
+  ./runevery-where.sh id test2
+  ./runevery-where.sh -v id test2
+  ./runevery-where.sh -v tail -2 /etc/passwd
+  ./runevery-where.sh i-like-pizza
+  echo $?
+ 
+ 
+ 
+ =========  Outputs
+ 
+ 
+ [root@ip-172-31-29-73 shellscripting]# su ec2-user
+
+
+[ec2-user@ip-172-31-29-73 shellscripting]$ ./runevery-where.sh -n hostname
+DRY RUN: ssh -o ConnectTimeout=2 server01  hostname
+
+---
+If get permission denied error try >>>>  chmod +x file_name
+
+[ec2-user@ip-172-31-29-73 shellscripting]$ ./runevery-where.sh -ns id
+DRY RUN: ssh -o ConnectTimeout=2 server01 sudo id
+[ec2-user@ip-172-31-29-73 shellscripting]$
+
+
+ ---
+ [ec2-user@ip-172-31-29-73 shellscripting]$ ./runevery-where.sh -nsv uptime
+server01
+DRY RUN: ssh -o ConnectTimeout=2 server01 sudo uptime
+[ec2-user@ip-172-31-29-73 shellscripting]$
+
+
+
+
+
+
+
+
+
+
+
+
+
+================
+
+
+Scenario:
+
+Remotely install apache # install something
+and curl the home page # validate if that is working
+
+yum install
+
+CRUD operations using http protocol for Rest API
+
+2x = request successful
+4x = bad request
+5x = error at server side
+
+Check Healt Status API of uptime continusly using shell script and check the responce.
+will execute scipt evry 30 sec and prepare chart
+
+- we will use influx db which accepts curl command
+
+ - Install apache on M2 and hit curl on its home page.
+ 
+ 
+ ---------------- Apache Install-----------------------------------
+
+#!/bin/bash
+
+# This script installs the apache web server on the given host.
+# This script assumes the user running it has sudo privs on the remote host.
+
+usage() {
+  # Display the usage and exit.
+  echo "Usage: ${0} HOST [HOSTN...]" >&2
+  exit 1
+}
+
+# Make sure the script is not being executed with superuser privileges.
+if [[ "${UID}" -eq 0 ]]
+then
+  echo 'Do not execute this script as root.' >&2
+  usage
+fi
+
+# If the user doesn't supply at least one argument, give them help.
+if [[ "${#}" -lt 1 ]]
+then
+  usage
+fi
+
+# Expect the best, prepare for the worst.
+EXIT_STATUS='0'
+
+# Loop through the provided servers.
+for SERVER in "${@}"
+do
+  echo "Starting installation process on: ${SERVER}"
+
+  # Ping the server to make sure it's up.
+  ping -c 1 ${SERVER} &> /dev/null
+
+  if [[ "${?}" -ne 0 ]]
+  then
+    echo "${SERVER} down."
+    EXIT_STATUS='1'
+    continue
+  fi
+
+  # Install the httpd package
+  ssh ${SERVER} sudo yum install -y httpd
+
+  # Create an index.html file.
+  ssh ${SERVER} 'echo "${HOSTNAME}" | sudo tee /var/www/html/index.html >/dev/null'
+
+  # Start httpd
+  ssh ${SERVER} sudo systemctl start httpd
+
+  # Enable httpd
+  ssh ${SERVER} sudo systemctl enable httpd
+
+  # Test that the web server is accessible.
+  curl http://${SERVER}
+
+  if [[ "${?}" -ne 0 ]]
+  then
+    echo "Could not access the web server on ${SERVER}." >&2
+    EXIT_STATUS='1'
+    continue
+  fi
+
+  echo "Finished installation process on: ${SERVER}"
+done
+
+exit ${EXIT_STATUS}
+
+
+
+=----- Output
+
+hit below command for execting script -
+[ec2-user@ip-172-31-29-73 shellscripting]$ sudo  bash ApacheInstall ec2-13-233-197-212.ap-south-1.compute.amazonaws.com
+
+Note:- give the host name of machine while scripting, i.e Public DNS 
+
+
+[root@ip-172-31-29-73 shellscripting]# ./ApacheInstall server01
+Starting installation process on: server01
+Loaded plugins: amazon-id, rhui-lb, search-disabled-repos
+Package httpd-2.4.6-88.el7.x86_64 already installed and latest version
+Nothing to do
+ip-172-31-18-210.ap-south-1.compute.internal
+Finished installation process on: server01
+[root@ip-172-31-29-73 shellscripting]#
+
+
+
+ 
+ 
+ 
+ 
+ To get the response code using shell scripting
+ curl -o /dev/null -s -w "%{http_code}\n" http://localhost
+ 
+ 
+ 
+ 
+ 
+ 
+  ======================== processCount.sh ===============
+  
+  
+#!/bin/bash
+
+# This script displays the PIDs and count of matching processes.
+
+PROC_NAME="${1}"
+server_name="${2}"
+PIDS=$(ssh ${server_name} pidof ${PROC_NAME})
+echo $PIDS
+COUNT=$(echo $PIDS | wc -w)
+
+if [[ "${COUNT}" -gt 0 ]]
+then
+  echo "PROCESS NAME: ${PROC_NAME}"
+  echo "COUNT: ${COUNT}"
+  echo "PID(S): ${PIDS}"
+else
+  echo "No processes named ${PROC_NAME} found." >&2
+  exit 1
+fi
+
+ 
+  
+  
+Output -
+
+[root@ip-172-31-29-73 shellscripting]# ./processCount.sh httpd server01
+4347 4298 4297 4296 4295 4294 4293
+PROCESS NAME: httpd
+COUNT: 7
+PID(S): 4347 4298 4297 4296 4295 4294 4293
+[root@ip-172-31-29-73 shellscripting]#
+
+ 
+ 

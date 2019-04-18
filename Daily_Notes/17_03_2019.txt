@@ -1,0 +1,256 @@
+Python Scripting: -
+
+
+
+Photoshop app
+backend is S3 bucket
+
+Use case- transfer Photo shop app to AWS and scale based on traffic needs. 
+So manage accoordingly we need ELB and auto-scalling group based on CPU usage.
+
+
+Notes:- 
+
+We can not access any service(eg. S3 bucket) from any other service (EC2 ) in AWS for that we need permission so we will create Role. Iam Role.
+
+###### Refer "Python Class_Machine Setup_Mahesh.txt"
+
+
+
+-Create Ubantu Machine 16.04
+-S3 bucket
+
+- Create S3 bucket in aws
+
+note- s3 bucket is online file system. Use is to store files,objects. We can host static website aswell in S3. We can use for logging purpose. Also those objects stored on S3 we can do versioning as well like Git.
+
+- Uncheck all in 3rd step while creating s3 bucket
+- create s3  
+- name (sangramdevopsbucket)
+
+Now Assgin role - 
+
+-Go to services and Iam search-  (Use is to access s3 bucket from EC2) 
+- Go to Roles >> Create Role  >> Now we have to access EC2 to S3 So select EC2 and click Next Permisssion
+- Search S3 >> Select 2nd AmazonS3FullAccess
+- Next Tags click >> key- name - value - S3 bucket name (sangramdevopsbucket)
+
+
+Attach Role to instance-
+
+- Go to instance >> Actions >> Attach Role (3rd option in drpdwn) >> Select created role in dropdown (sangramdevopsbucket)
+
+- Do SSH to created system , and follow 3rd step from the notes  -  "Python Class_Machine Setup_Mahesh.txt"
+
+cd /home/ubuntu
+
+
+
+- Code of sample photo shop application
+ git clone https://github.com/maheshkharwadkar/Django-Application.git
+
+-  django-admin.py startproject s3pythonapp    
+
+ Note- @@@@@ django - it is web framework for python similar to spring in java
+ 
+ settings.py - this is cofiguration file on django app
+
+
+ubuntu@ip-172-31-29-91:~$  git clone https://github.com/maheshkharwadkar/Django-Application.git
+Cloning into 'Django-Application'...
+remote: Enumerating objects: 38, done.
+remote: Total 38 (delta 0), reused 0 (delta 0), pack-reused 38
+Unpacking objects: 100% (38/38), done.
+Checking connectivity... done.
+ubuntu@ip-172-31-29-91:~$
+ubuntu@ip-172-31-29-91:~$
+ubuntu@ip-172-31-29-91:~$ ls -ltr
+total 8
+drwxrwxr-x 3 ubuntu ubuntu 4096 Mar 17 03:33 s3pythonapp
+drwxrwxr-x 5 ubuntu ubuntu 4096 Mar 17 04:45 Django-Application
+ubuntu@ip-172-31-29-91:~$
+ubuntu@ip-172-31-29-91:~$ cd Django-Application
+ubuntu@ip-172-31-29-91:~/Django-Application$
+ubuntu@ip-172-31-29-91:~/Django-Application$
+ubuntu@ip-172-31-29-91:~/Django-Application$ ls -ltr
+total 16
+drwxrwxr-x 2 ubuntu ubuntu 4096 Mar 17 04:45 samplepictures
+drwxrwxr-x 4 ubuntu ubuntu 4096 Mar 17 04:45 s3pythonapp
+-rw-rw-r-- 1 ubuntu ubuntu  253 Mar 17 04:45 django.service
+-rw-rw-r-- 1 ubuntu ubuntu  252 Mar 17 04:45 userdata.sh
+ubuntu@ip-172-31-29-91:~/Django-Application$ cp s3pythonapp /home/ubuntu
+cp: omitting directory 's3pythonapp'
+ubuntu@ip-172-31-29-91:~/Django-Application$ cp -r s3pythonapp /home/ubuntu
+ubuntu@ip-172-31-29-91:~/Django-Application$
+ubuntu@ip-172-31-29-91:~/Django-Application$ cd ..
+ubuntu@ip-172-31-29-91:~$ ls -ltr
+total 8
+drwxrwxr-x 5 ubuntu ubuntu 4096 Mar 17 04:45 Django-Application
+drwxrwxr-x 4 ubuntu ubuntu 4096 Mar 17 04:54 s3pythonapp
+ubuntu@ip-172-31-29-91:~$
+
+- @@@@@
+ubuntu@ip-172-31-29-91:~/s3pythonapp$ ls -ltr
+total 188
+drwxrwxr-x 3 ubuntu ubuntu   4096 Mar 17 04:54 s3pythonapp
+-rwxr-xr-x 1 ubuntu ubuntu    809 Mar 17 04:54 manage.py
+-rw-rw-r-- 1 ubuntu ubuntu 184320 Mar 17 04:54 db.sqlite3
+ubuntu@ip-172-31-29-91:~/s3pythonapp$ cd s3pythonapp
+ubuntu@ip-172-31-29-91:~/s3pythonapp/s3pythonapp$
+ubuntu@ip-172-31-29-91:~/s3pythonapp/s3pythonapp$
+ubuntu@ip-172-31-29-91:~/s3pythonapp/s3pythonapp$ ls -ltr
+total 28
+-rw-r--r-- 1 ubuntu ubuntu  400 Mar 17 04:54 wsgi.py
+-rw-rw-r-- 1 ubuntu ubuntu 1446 Mar 17 04:54 views.py
+-rw-r--r-- 1 ubuntu ubuntu  977 Mar 17 04:54 urls.py
+-rw-rw-r-- 1 ubuntu ubuntu 1568 Mar 17 04:54 upload_to_s3.py
+drwxrwxr-x 2 ubuntu ubuntu 4096 Mar 17 04:54 templates
+-rw-r--r-- 1 ubuntu ubuntu 4055 Mar 17 04:54 settings.py
+-rw-r--r-- 1 ubuntu ubuntu    0 Mar 17 04:54 __init__.py
+-rw-rw-r-- 1 ubuntu ubuntu  210 Mar 17 04:54 forms.py
+ubuntu@ip-172-31-29-91:~/s3pythonapp/s3pythonapp$
+ubuntu@ip-172-31-29-91:~/s3pythonapp/s3pythonapp$
+ubuntu@ip-172-31-29-91:~/s3pythonapp/s3pythonapp$
+ubuntu@ip-172-31-29-91:~/s3pythonapp/s3pythonapp$ vi settings.py
+
+- shift+: set number  ( Go to 91 line)
+
+- we need to change below things in settings.py
+
+ubuntu@ip-172-31-29-91:~/s3pythonapp/s3pythonapp$ vi settings.py
+
+
+at 91 line change your s3 bucket name.
+line 30 - ["*"]
+
+
+- manage.py is entry point of django just like main in java
+
+Now we are runnig python on 80 port
+
+ubuntu@ip-172-31-29-91:~/Django-Application/s3pythonapp$ sudo su -
+root@ip-172-31-29-91:~#
+root@ip-172-31-29-91:~#
+root@ip-172-31-29-91:~#
+root@ip-172-31-29-91:~# cd /home/ubuntu/s3pythonapp/
+root@ip-172-31-29-91:/home/ubuntu/s3pythonapp#
+root@ip-172-31-29-91:/home/ubuntu/s3pythonapp# python  maanage.py runserver 0.0.0.0:80
+
+ - If error 'Code already in use ' 
+ 
+ Check proceses running
+ 
+ netstat -tulpn
+
+kill -9 PID   >> to kill any preocess
+	
+-	Check manually by hitting public ip of machine in browser
+13.232.44.14
+
+Try to upload any image and view image to check application is working fine
+
+we need to create demon and write init script to start service. 
+
+vi ../Django-Application/django.service
+
+
+
+root@ip-172-31-29-91:/home/ubuntu# ls -ltr
+total 8
+drwxrwxr-x 4 ubuntu ubuntu 4096 Mar 17 04:54 s3pythonapp
+drwxrwxr-x 5 ubuntu ubuntu 4096 Mar 17 05:33 Django-Application
+root@ip-172-31-29-91:/home/ubuntu#
+
+- Copy the file Django-Application to /etc/systemd/system/
+
+root@ip-172-31-29-91:/home/ubuntu/Django-Application# cp django.service /etc/systemd/system/
+
+root@ip-172-31-29-91:/home/ubuntu/Django-Application# cd /etc/systemd/system/
+root@ip-172-31-29-91:/etc/systemd/system#
+root@ip-172-31-29-91:/etc/systemd/system# ls -ltr
+total 72
+drwxr-xr-x 2 root root 4096 Feb 12 17:27 getty.target.wants
+drwxr-xr-x 2 root root 4096 Feb 12 17:27 default.target.wants
+lrwxrwxrwx 1 root root   35 Feb 12 17:27 syslog.service -> /lib/systemd/system/rsyslog.service
+drwxr-xr-x 2 root root 4096 Feb 12 17:27 network-online.target.wants
+drwxr-xr-x 2 root root 4096 Feb 12 17:28 graphical.target.wants
+lrwxrwxrwx 1 root root   38 Feb 12 17:29 iscsi.service -> /lib/systemd/system/open-iscsi.service
+drwxr-xr-x 2 root root 4096 Feb 12 17:29 cloud-final.service.wants
+drwxr-xr-x 2 root root 4096 Feb 12 17:29 timers.target.wants
+drwxr-xr-x 2 root root 4096 Feb 12 17:29 final.target.wants
+drwxr-xr-x 2 root root 4096 Feb 12 17:29 paths.target.wants
+lrwxrwxrwx 1 root root   31 Feb 12 17:29 sshd.service -> /lib/systemd/system/ssh.service
+drwxr-xr-x 2 root root 4096 Feb 12 17:29 open-vm-tools.service.requires
+drwxr-xr-x 2 root root 4096 Feb 12 17:29 cloud-init.target.wants
+drwxr-xr-x 2 root root 4096 Feb 12 17:29 sockets.target.wants
+drwxr-xr-x 2 root root 4096 Feb 12 17:29 sysinit.target.wants
+-rw-r--r-- 1 root root  227 Mar 17 03:09 snap-core-6350.mount
+-rw-r--r-- 1 root root  260 Mar 17 03:09 snap-amazon\x2dssm\x2dagent-930.mount
+-rw-r--r-- 1 root root  526 Mar 17 03:09 snap.amazon-ssm-agent.amazon-ssm-agent.service
+drwxr-xr-x 2 root root 4096 Mar 17 03:09 multi-user.target.wants
+drwxr-xr-x 5 root root 4096 Mar 17 05:36 Django-Application
+-rw-r--r-- 1 root root  253 Mar 17 05:41 django.service
+root@ip-172-31-29-91:/etc/systemd/system#
+
+
+- >>> root@ip-172-31-29-91:/etc/systemd/system#  sudo systemctl start django.service
+>>> root@ip-172-31-29-91:/etc/systemd/system# sudo systemctl enable django.service
+Created symlink from /etc/systemd/system/multi-user.target.wants/django.service to /etc/systemd/system/django.service.
+
+
+ Now wwe will create application Load Balancer
+ 
+ ---------------------
+ELB: SampleEc2S3LoadBalancer
+Security Group: s3app
+Targer Group: EC2S3Group
+Timeout: 10 sec
+
+
+  ELB name: SampleEc2S3LoadBalancer
+  - Scheme - internet facing   (( user can direclt call to ECB of 80 port)
+Targer Group: EC2S3Group
+Timeout- 10 sec
+
+
+Note:  User contact to load balancer and then traffic routed to any of the instances
+
+Healthy check - 
+Path - /    >> / means 80 port
+
+Advance Healtch check:-
+
+interval- 30 sec
+res code - 200
+
+so any service hit to ECB and ECB will hit each instance and check healthy status, ECB will check rsp code after every 30 sec. So resp code should be 200 ( we can mention anything). 
+Healthy threhold - 5 >> means ECB will hit the instance 5 times and check resp code
+Unhealty Threshold - 2 >> means any 2 unscussful resp code acceptable
+
+
+>> Register target - now dont give anything. as we are using autoscaling
+Autoscaling group >  we will create policy and within it we will crete group and give no of instanses.
+- Next
+Create :
+
+
+Go to created load balancer 
+copy DNS name 
+paste in settigns.py at line no 45
+
+ubuntu@ip-172-31-29-91:~$ vi /home/ubuntu/s3pythonapp/s3pythonapp/settings.py
+
+
+Step 6)
+
+Home work-
+ Create AMI - s3ApplicationAMI (Create image of instance)
+ read word doc shared about auto scaling
+
+Stop the instance
+Actions - Instance - Image - Create Image
+
+Step 7)
+We will provide AMI id and ELB's target group to launch configuration
+Pass other details like COU utilization to scale up and scale down
+
